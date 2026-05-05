@@ -1228,7 +1228,11 @@
                 });
                 return;
             }
-
+          
+       
+    await Pi.authenticate(['payments'], (payment) => {
+        console.warn('Incomplete:', payment);
+    });
             try {
                 await Pi.createPayment(
                     { amount: amt, memo: label, metadata: { uid: this.state.id } },
