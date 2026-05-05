@@ -1,5 +1,6 @@
 [build]
-  command = "echo 'Static site - no build needed'"
+  command = "npm install"
+  functions = "netlify/functions"
   publish = "."
 
 [build.environment]
