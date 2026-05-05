@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Chatoo Ultra Pro - Web3 Social Network on Pi Network">
+    <meta name="author" content="Kamikaz007">
+    <title>Chatoo Ultra Pro | Web3 Edition</title>
+
+    <!-- Pi Network SDK -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ═══════════════ Config Files ═══════════════ -->
+    <script src="config.js"></script>
+    <script src="config/rewards-config.js"></script>
+    <script src="config/shop-config.js"></script>
+    <script src="config/achievements-config.js"></script>
+
+    <!-- ═══════════════ Core Modules ═══════════════ -->
+    <script src="js/chatoo-blockchain.js"></script>
+    <script src="js/chatoo-auth.js"></script>
+    <script src="js/chatoo-achievements.js"></script>
+    <script src="js/chatoo-referrals.js"></script>
+    <script src="js/chatoo-notifications.js"></script>
+    <script src="js/chatoo-actions.js"></script>
+    <script src="js/chatoo-admin.js"></script>
+
+    <style>
+        :root {
+            --primary: #8257e5;
+            --gold: #ffd700;
+            --dark: #09090b;
+            --surface: #121214;
+            --accent: #ff4757;
+            --glass: rgba(255,255,255,0.05);
+            --rpc-online: #00ff88;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+            margin: 0; 
+            padding: 0;
+        }
+
+        body, html {
+            margin: 0; 
+            padding: 0; 
+            height: 100%;
+            width: 100%;
+            background: var(--dark); 
+            color: #fff;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════ Background Video ═══════════════ */
+        #bg-video {
+            position: fixed;
+            top: 50%; 
+            left: 50%;
+            min-width: 100%; 
+            min-height: 100%;
+            width: auto; 
+            height: auto;
+            z-index: 0;
+            transform: translateX(-50%) translateY(-50%);
+            filter: brightness(0.3) saturate(0.5);
+            object-fit: cover;
+        }
+
+        #bg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(9,9,11,0.7) 100%);
+            pointer-events: none;
+        }
+
+        /* ═══════════════ App Shell ═══════════════ */
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ═══════════════ XP Progress Bar ═══════════════ */
+        #xp-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), #ff8c00);
+            box-shadow: 0 0 16px var(--gold);
+            z-index: 10000;
+            transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 0%;
+        }
+
+        /* ═══════════════ Header ═══════════════ */
+        header {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            right: 0;
+            padding: 16px 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 700;
+            pointer-events: none;
+        }
+
+        header > * {
+            pointer-events: auto;
+        }
+
+        .header-profile-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            padding: 6px 14px 6px 6px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.09);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .header-profile-section:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--primary);
+        }
+
+        .header-avatar {
+            width: 34px; 
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        #rank-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .rpc-indicator {
+            width: 10px; 
+            height: 10px;
+            background: #444;
+            border-radius: 50%;
+            transition: 0.5s;
+        }
+
+        .rpc-active { 
+            background: var(--rpc-online); 
+            box-shadow: 0 0 14px var(--rpc-online); 
+        }
+
+        .status-pill {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 8px 14px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 11px; 
+            font-weight: 700;
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-pill:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.15);
+        }
+
+        /* ═══════════════ Marquee ═══════════════ */
+        .marquee-container {
+            position: fixed;
+            top: 72px; 
+            left: 0; 
+            right: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(10px);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,215,0,0.12);
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 600;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            animation: scrollText 20s linear infinite;
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes scrollText {
+            from { transform: translateX(100vw); }
+            to   { transform: translateX(-100%); }
+        }
+
+        /* ═══════════════ Radar Strip ═══════════════ */
+        .radar-scroller {
+            position: fixed;
+            bottom: 85px; 
+            left: 0; 
+            right: 0;
+            display: flex;
+            gap: 12px;
+            padding: 10px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            z-index: 500;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .radar-scroller::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        .venue-node {
+            background: rgba(18,18,20,0.8);
+            backdrop-filter: blur(24px);
+            min-width: 160px;
+            padding: 14px 16px;
+            border-radius: 22px;
+            border: 1px solid rgba(130,87,229,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .venue-node:active {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+            transform: scale(0.96);
+        }
+
+        /* ═══════════════ Navigation ═══════════════ */
+        nav {
+            position: fixed;
+            bottom: 0; 
+            left: 0; 
+            right: 0;
+            background: rgba(5,5,5,0.97);
+            backdrop-filter: blur(24px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 8px calc(12px + var(--safe-bottom));
+            border-top: 1px solid rgba(255,255,255,0.06);
+            z-index: 2000;
+        }
+
+        .nav-btn {
+            font-size: 22px;
+            opacity: 0.35;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            padding: 8px;
+            position: relative;
+        }
+
+        .nav-btn.active {
+            opacity: 1;
+            color: var(--gold);
+            transform: translateY(-6px);
+            text-shadow: 0 0 20px var(--gold);
+        }
+
+        /* ═══════════════ View Modals ═══════════════ */
+        .view-modal {
+            position: fixed; 
+            inset: 0;
+            background: var(--dark);
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .view-modal.active { 
+            display: flex; 
+            transform: translateY(0); 
+        }
+
+        /* ═══════════════ Chat ═══════════════ */
+        .chat-stream {
+            flex-grow: 1; 
+            overflow-y: auto;
+            padding: 24px 18px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 14px;
+            background: radial-gradient(circle at top, #16161d, #09090b);
+        }
+
+        .msg {
+            padding: 14px 18px; 
+            border-radius: 20px;
+            max-width: 82%;
+            animation: msgPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            font-size: 14px; 
+            line-height: 1.5; 
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .msg.me {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), #5d3bb3);
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 8px 20px rgba(130,87,229,0.3);
+        }
+
+        .msg.them {
+            align-self: flex-start;
+            background: var(--surface);
+            border-bottom-left-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .gift-notif {
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            color: #000; 
+            padding: 10px 16px; 
+            border-radius: 16px;
+            text-align: center; 
+            font-weight: 900; 
+            margin: 8px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes msgPop { 
+            from { opacity:0; transform: scale(0.7) translateY(30px); } 
+            to { opacity:1; transform: scale(1) translateY(0); } 
+        }
+
+        @keyframes pulse { 
+            0%,100% { transform: scale(1); } 
+            50% { transform: scale(1.03); } 
+        }
+
+        /* ═══════════════ Back Button ═══════════════ */
+        .back-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(130,87,229,0.3);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(130,87,229,0.3);
+        }
+
+        .back-button:active {
+            transform: scale(0.9);
+        }
+
+        /* ═══════════════ Map Controls ═══════════════ */
+        .leaflet-control-zoom { display: none !important; }
+
+        .custom-map-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .custom-map-btn:hover {
+            background: rgba(130,87,229,0.3);
+            border-color: var(--primary);
+        }
+
+        /* ═══════════════ Shop Cards ═══════════════ */
+        .shop-card {
+            background: var(--surface); 
+            padding: 16px; 
+            border-radius: 18px;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.04);
+            position: relative; 
+            overflow: hidden;
+        }
+
+        .shop-card:hover { 
+            transform: translateY(-3px); 
+            border-color: var(--primary); 
+            box-shadow: 0 12px 28px rgba(130,87,229,0.2); 
+        }
+
+        .shop-card:active { 
+            transform: scale(0.96); 
+        }
+
+        .nft-card { 
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a); 
+            border: 2px solid rgba(255,215,0,0.2); 
+            animation: nftGlow 3s infinite alternate; 
+        }
+
+        @keyframes nftGlow { 
+            from { border-color: rgba(255,215,0,0.15); box-shadow: 0 0 10px rgba(255,215,0,0.05); } 
+            to { border-color: rgba(255,215,0,0.4); box-shadow: 0 0 25px rgba(255,215,0,0.15); } 
+        }
+
+        .shop-tab { 
+            background: var(--glass); 
+            color: #fff; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 10px 18px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .shop-tab.active { 
+            background: var(--primary) !important; 
+            border: none !important; 
+        }
+
+        .purchase-history-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.04); 
+            font-size: 12px; 
+        }
+
+        /* ═══════════════ Map Styles ═══════════════ */
+        .leaflet-container { 
+            background: #0a0a0f !important; 
+            font-family: inherit !important; 
+        }
+
+        .leaflet-popup-content-wrapper { 
+            background: rgba(18,18,20,0.95) !important; 
+            backdrop-filter: blur(20px) !important; 
+            color: #fff !important; 
+            border-radius: 16px !important; 
+            border: 1px solid rgba(130,87,229,0.4) !important; 
+        }
+
+        .leaflet-popup-tip { 
+            background: rgba(18,18,20,0.95) !important; 
+        }
+
+        .venue-popup-content { 
+            text-align: center; 
+            padding: 8px; 
+        }
+
+        .venue-popup-btn { 
+            background: var(--primary); 
+            border: none; 
+            color: #fff; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            margin-top: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            width: 100%; 
+        }
+
+        .pulse-marker { 
+            width: 16px; 
+            height: 16px; 
+            background: var(--primary); 
+            border-radius: 50%; 
+            border: 3px solid var(--gold); 
+        }
+
+        .pulse-ring { 
+            width: 30px; 
+            height: 30px; 
+            border: 2px solid var(--gold); 
+            border-radius: 50%; 
+            position: absolute; 
+            top: -10px; 
+            left: -10px; 
+            animation: pulseRing 2s infinite; 
+        }
+
+        @keyframes pulseRing { 
+            0% { transform: scale(0.5); opacity: 1; } 
+            100% { transform: scale(2.5); opacity: 0; } 
+        }
+
+        .map-legend { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 16px; 
+            z-index: 1000; 
+            background: rgba(0,0,0,0.75); 
+            backdrop-filter: blur(16px); 
+            padding: 10px 14px; 
+            border-radius: 16px; 
+            font-size: 10px; 
+        }
+
+        .legend-dot { 
+            display: inline-block; 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            margin-right: 6px; 
+        }
+
+        .legend-dot.live { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+        .legend-dot.active { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+        .legend-dot.sync { background: #ffd700; box-shadow: 0 0 8px #ffd700; }
+
+        /* ═══════════════ Scrollbar ═══════════════ */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        /* ═══════════════ Audio Hub ═══════════════ */
+        .audio-hub {
+            background: rgba(130,87,229,0.15);
+            padding: 14px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+        }
+
+        .vis { 
+            display: flex; 
+            gap: 4px; 
+            height: 20px; 
+            align-items: center; 
+        }
+
+        .vis-bar { 
+            width: 3px; 
+            height: 10px; 
+            background: var(--gold); 
+            border-radius: 2px; 
+            animation: wave 1s infinite alternate; 
+        }
+
+        @keyframes wave { 
+            from { height: 4px; } 
+            to { height: 18px; } 
+        }
+
+        /* ═══════════════ Responsive ═══════════════ */
+        @media (max-width: 380px) {
+            .venue-node { min-width: 140px; padding: 10px 12px; }
+            .shop-card { padding: 12px; }
+            .msg { max-width: 90%; font-size: 13px; }
+        }
+
+        @media (min-width: 768px) {
+            .app-shell { max-width: 480px; margin: 0 auto; }
+            .view-modal { max-width: 480px; left: 50%; transform: translate(-50%, 100%); }
+            .view-modal.active { transform: translate(-50%, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════ Background ═══════════════ -->
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="video/bg-chat-cinematic.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+
+    <!-- ═══════════════ XP Bar ═══════════════ -->
+    <div id="xp-indicator"></div>
+
+    <!-- ═══════════════ Main App Shell ═══════════════ -->
+    <div class="app-shell">
+
+        <!-- Header -->
+        <header>
+            <div class="header-profile-section" onclick="chatoo.route('profile')">
+                <img id="header-avatar-img" class="header-avatar" src="https://via.placeholder.com/150" alt="Profile">
+                <span id="rank-label">ORIGIN VOYAGER</span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px;">
+                <div id="rpc-dot" class="rpc-indicator"></div>
+                <div style="font-weight:900;font-size:22px;letter-spacing:3px;">CHATOO</div>
+            </div>
+
+            <div class="status-pill" onclick="chatoo.route('shop')">
+                ✨ <span id="user-pts-display">0</span>
+            </div>
+        </header>
+
+        <!-- Marquee -->
+        <div class="marquee-container">
+            <div class="marquee-text" id="marquee-content">
+                جاري تحميل الأماكن القريبة...
+            </div>
+        </div>
+
+        <!-- Radar Strip -->
+        <div class="radar-scroller" id="radar-list"></div>
+
+        <!-- Navigation -->
+        <nav>
+            <div class="nav-btn active" onclick="chatoo.route('map')">📍</div>
+            <div class="nav-btn" onclick="chatoo.route('shop')">🎁</div>
+            <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
+        </nav>
+
+    </div>
+
+    <!-- ═══════════════ MAP MODAL ═══════════════ -->
+    <div id="modal-map" class="view-modal">
+        <div id="map-container" style="width:100%;height:100%;position:relative;">
+            <button class="back-button" onclick="chatoo.goHome()" style="position:absolute;top:20px;left:20px;z-index:1000;">✕</button>
+            <div style="position:absolute;top:20px;right:20px;z-index:1000;display:flex;gap:8px;flex-direction:column;">
+                <button class="custom-map-btn" onclick="chatoo.mapZoomIn()">＋</button>
+                <button class="custom-map-btn" onclick="chatoo.mapZoomOut()">－</button>
+                <button class="custom-map-btn" onclick="chatoo.locateMe()">📍</button>
+                <button class="custom-map-btn" onclick="chatoo.toggleMapLayer()" id="layer-toggle-btn">🛰️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ CHAT MODAL ═══════════════ -->
+    <div id="modal-chat" class="view-modal">
+        <div style="background:var(--primary);padding:20px;display:flex;justify-content:space-between;align-items:center;">
+            <div onclick="chatoo.closeChat()" style="font-size:26px;cursor:pointer;">✕</div>
+            <div style="text-align:center;">
+                <b id="chat-venue-name">Venue</b>
+                <br><small id="chat-venue-owner" style="opacity:0.7;"></small>
+            </div>
+            <div onclick="chatoo.toggleAudioLive()" style="cursor:pointer;font-size:22px;">🎙️</div>
+        </div>
+        <div class="audio-hub" id="audio-panel">
+            <div class="vis">
+                <div class="vis-bar"></div>
+                <div class="vis-bar" style="animation-delay:0.2s"></div>
+                <div class="vis-bar" style="animation-delay:0.4s"></div>
+            </div>
+            <span>Audio Room Active</span>
+            <button onclick="chatoo.toggleAudioLive()" style="background:var(--accent);border:none;color:#fff;padding:6px 12px;border-radius:10px;cursor:pointer;">Leave</button>
+        </div>
+        <div class="chat-stream" id="chat-flow"></div>
+        <div style="padding:16px;background:#0c0c0e;display:flex;gap:12px;align-items:center;border-top:1px solid var(--glass);">
+            <div onclick="document.getElementById('real-file-input').click()" style="font-size:24px;cursor:pointer;">🖼️</div>
+            <input type="file" id="real-file-input" hidden accept="image/*" capture="environment" onchange="chatoo.handleFileUpload(this)">
+            <div style="flex-grow:1;background:#1a1a1d;border-radius:30px;display:flex;align-items:center;padding:0 16px;">
+                <input type="text" id="chat-input" placeholder="اكتب رسالة..." style="flex-grow:1;background:none;border:none;padding:12px 0;color:#fff;direction:rtl;">
+                <span id="mic-icon" onclick="chatoo.toggleVoiceNote()" style="font-size:22px;cursor:pointer;">🎤</span>
+            </div>
+            <button onclick="chatoo.sendMsg()" style="background:var(--gold);border:none;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;color:#000;">➔</button>
+        </div>
+        <button onclick="chatooBlock?.renderTransferModal()" style="background:var(--primary);border:none;color:#fff;padding:10px 16px;border-radius:20px;font-weight:bold;cursor:pointer;margin:8px auto;display:block;">
+            💸 تحويل Pi
+        </button>
+    </div>
+
+    <!-- ═══════════════ SHOP MODAL ═══════════════ -->
+    <div id="modal-shop" class="view-modal">
+        <div style="height:100%;overflow-y:auto;padding:24px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div>
+                    <h1 style="margin:0;font-size:28px;">💎 Web3 Shop</h1>
+                    <small style="opacity:0.6;">Marketplace • NFTs • Rewards</small>
+                </div>
+                <button class="back-button" onclick="chatoo.goHome()">✕</button>
+            </div>
+
+            <!-- Balance Card -->
+            <div style="background:linear-gradient(135deg, #1a1a2e, #16213e);border-radius:20px;padding:20px;margin-bottom:20px;border:1px solid rgba(255,215,0,0.15);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <small style="opacity:0.6;">💰 رصيد XP</small>
+                        <h2 style="margin:4px 0;color:var(--gold);" id="shop-xp-display">0</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <small style="opacity:0.6;">🏆 الرتبة</small>
+                        <h3 style="margin:4px 0;color:var(--primary);" id="shop-rank-display">VOYAGER</h3>
+                    </div>
+                </div>
+                <button onclick="chatoo.claimDailyReward()" style="width:100%;margin-top:14px;background:linear-gradient(90deg, var(--gold), #ff8c00);border:none;color:#000;padding:14px;border-radius:16px;font-weight:900;font-size:15px;cursor:pointer;">
+                    🎁 المكافأة اليومية
+                </button>
+            </div>
+
+            <!-- Category Tabs -->
+            <div style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;" id="shop-tabs-container">
+                <!-- تُملأ dynamically -->
+            </div>
+
+            <!-- Products Grid -->
+            <div id="shop-items-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <!-- تُملأ dynamically من shop-config.js -->
+            </div>
+
+            <!-- NFTs Grid -->
+            <div id="shop-nfts-grid" style="display:none;grid-template-columns:1fr 1fr;gap:14px;"></div>
+            <!-- Tickets Grid -->
+            <div id="shop-tickets-grid" style="display:none;grid-template-columns:1fr 1fr;gap:14px;"></div>
+            <!-- Boosters Grid -->
+            <div id="shop-boosters-grid" style="display:none;grid-template-columns:1fr 1fr;gap:14px;"></div>
+
+            <!-- Purchase History -->
+            <div style="margin-top:30px;background:var(--surface);border-radius:20px;padding:18px;">
+                <h3 style="margin:0 0 14px 0;display:flex;justify-content:space-between;">
+                    📜 سجل المشتريات
+                    <button onclick="chatoo.clearPurchaseHistory()" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;">مسح</button>
+                </h3>
+                <div id="purchase-history" style="max-height:200px;overflow-y:auto;">
+                    <small style="opacity:0.4;">لا توجد مشتريات بعد</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ PROFILE MODAL ═══════════════ -->
+    <div id="modal-profile" class="view-modal">
+        <div style="height:100%;overflow-y:auto;padding:40px 24px;text-align:center;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <button class="back-button" onclick="chatoo.goHome()">✕</button>
+                <b style="font-size:16px;">الملف الشخصي</b>
+                <span style="opacity:0;">✕</span>
+            </div>
+
+            <!-- Avatar -->
+            <div style="width:120px;height:120px;border-radius:50%;margin:30px auto;padding:5px;background:conic-gradient(var(--gold) 75%,#333 0);">
+                <img id="my-avatar" src="https://via.placeholder.com/150" style="width:100%;height:100%;border-radius:50%;border:6px solid var(--dark);object-fit:cover;">
+            </div>
+
+            <h2 id="display-name">Voyager #001</h2>
+            <div id="xp-val" style="font-size:38px;font-weight:900;color:var(--gold);">0</div>
+            <p style="opacity:0.5;">Total Experience Points</p>
+
+            <!-- Inventory -->
+            <div id="inventory-display" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:20px 0;"></div>
+
+            <!-- Achievements Section -->
+            <div id="profile-achievements" style="margin-top:20px;"></div>
+
+            <!-- Referrals Section -->
+            <div id="profile-referrals" style="margin-top:20px;"></div>
+
+            <!-- Logout -->
+            <button onclick="chatoo.logout()" style="margin-top:30px;color:var(--accent);background:none;border:none;font-weight:bold;cursor:pointer;font-size:14px;">
+                ⏻ تسجيل الخروج
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ MAIN APP LOGIC ═══════════════ -->
+    <script>
+    // ═══════════════════ Chatoo Core Object ═══════════════════
+    const chatoo = {
+        state: {
+            id: localStorage.getItem('chatoo_uid') || "U_" + Math.floor(Math.random() * 99999),
+            xp: parseInt(localStorage.getItem('chatoo_xp')) || 0,
+            map: null,
+            room: null,
+            sub: null,
+            isAudioLive: false,
+            recorder: null,
+            audioChunks: [],
+            piReady: false,
+            currentLayer: 'dark',
+            venues: [],
+            markers: [],
+            userMarker: null,
+            satLayer: null
+        },
+
+        purchasedItems: JSON.parse(localStorage.getItem('chatoo_inventory') || '[]'),
+
+        // ═══════════════ INIT ═══════════════
+        async init() {
+            localStorage.setItem('chatoo_uid', this.state.id);
+            this.initFirebase();
+            this.initPiWatcher();
+            this.updateXPUI();
+            this.updateRadarStrip();
+            this.renderShopProducts();
+            this.renderPurchaseHistory();
+
+            // تحديث XP في المتجر
+            const shopXpEl = document.getElementById('shop-xp-display');
+            if (shopXpEl) shopXpEl.innerText = this.state.xp;
+
+            // استعادة تأثيرات المقتنيات
+            this.purchasedItems.forEach(item => {
+                if (item.active !== false) this.applyItemEffect(item.id, item.type);
+            });
+            this.renderInventory();
+
+            // تحديث Marquee
+            this.updateMarquee();
+
+            console.log('✅ Chatoo Ultra Pro Ready');
+            console.log('👑 Admin: Kamikaz007');
+            console.log('🌐 Network:', CHATOO_CONFIG.app.network.toUpperCase());
+        },
+
+        // ═══════════════ FIREBASE ═══════════════
+        initFirebase() {
+            if (typeof firebase === 'undefined') return;
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(CHATOO_CONFIG.firebase);
+                }
+                window.db = firebase.firestore();
+                window.storage = firebase.storage();
+                console.log('🔥 Firebase Ready');
+            } catch (e) {
+                console.warn('Firebase init failed:', e.message);
+            }
+        },
+
+        // ═══════════════ PI NETWORK ═══════════════
+        initPiWatcher() {
+            let attempts = 0;
+            const check = setInterval(() => {
+                attempts++;
+                if (window.Pi) {
+                    clearInterval(check);
+                    try {
+                        Pi.init({ 
+                            version: CHATOO_CONFIG.piNetwork.version, 
+                            sandbox: CHATOO_CONFIG.piNetwork.sandbox 
+                        });
+                        this.state.piReady = true;
+                        document.getElementById('rpc-dot').classList.add('rpc-active');
+                        if (window.chatooNotif) {
+                            window.chatooNotif.systemAlert(`Pi ${CHATOO_CONFIG.app.network.toUpperCase()} متصل`);
+                        }
+                    } catch (e) {
+                        console.error("Pi Init Error:", e);
+                    }
+                }
+                if (attempts > 30) clearInterval(check);
+            }, 500);
+        },
+
+        // ═══════════════ NAVIGATION ═══════════════
+        goHome() {
+            document.querySelectorAll('.view-modal').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const navBtns = document.querySelectorAll('.nav-btn');
+            if (navBtns[0]) navBtns[0].classList.add('active');
+            if (this.state.map) this.state.map.invalidateSize();
+        },
+
+        route(view) {
+            if (view === 'map') {
+                const mapModal = document.getElementById('modal-map');
+                if (mapModal && mapModal.classList.contains('active')) {
+                    this.goHome();
+                    return;
+                }
+            }
+
+            document.querySelectorAll('.view-modal').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            if (view === 'map') {
+                document.getElementById('modal-map').classList.add('active');
+                setTimeout(() => this.initMap(), 200);
+            }
+            if (view === 'shop') {
+                document.getElementById('modal-shop').classList.add('active');
+                this.renderShopProducts();
+                this.renderPurchaseHistory();
+                const shopXpEl = document.getElementById('shop-xp-display');
+                if (shopXpEl) shopXpEl.innerText = this.state.xp;
+            }
+            if (view === 'profile') {
+                document.getElementById('modal-profile').classList.add('active');
+                this.renderInventory();
+                if (window.chatooAchievements) {
+                    window.chatooAchievements.renderAchievementsList('profile-achievements');
+                }
+                if (window.chatooReferrals) {
+                    window.chatooReferrals.renderReferralCard('profile-referrals');
+                }
+            }
+
+            const idx = { map: 0, shop: 1, profile: 2 }[view];
+            if (idx !== undefined) {
+                const navBtns = document.querySelectorAll('.nav-btn');
+                if (navBtns[idx]) navBtns[idx].classList.add('active');
+            }
+        },
+
+        // ═══════════════ MAP ═══════════════
+        initMap() {
+            if (this.state.map) {
+                this.state.map.invalidateSize();
+                return;
+            }
+
+            const container = document.getElementById('map-container');
+            if (!container) return;
+
+            const center = CHATOO_CONFIG.map.defaultCenter;
+            this.state.map = L.map('map-container', {
+                center: center,
+                zoom: CHATOO_CONFIG.map.defaultZoom,
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            this.state.darkLayer = L.tileLayer(CHATOO_CONFIG.map.darkTileLayer, { maxZoom: 19 });
+            this.state.satLayer = L.tileLayer(CHATOO_CONFIG.map.satelliteLayer, { maxZoom: 19 });
+            this.state.darkLayer.addTo(this.state.map);
+
+            this.renderVenueMarkers();
+            this.addMapLegend();
+            this.locateMe();
+
+            if (window.chatooAchievements) {
+                window.chatooAchievements.trackMapOpen();
+            }
+        },
+
+        renderVenueMarkers() {
+            if (!this.state.map) return;
+            if (this.state.markers) this.state.markers.forEach(m => this.state.map.removeLayer(m));
+            this.state.markers = [];
+
+            const venues = window.chatooActions?.state?.nearbyVenues || [
+                { name: "Haj Mostapha", lat: 36.8665, lon: 10.1647, status: "active", type: "restaurant" },
+                { name: "Café Bizerte", lat: 37.2744, lon: 9.8739, status: "live", type: "cafe" },
+                { name: "Central Node", lat: 36.8065, lon: 10.1815, status: "sync", type: "bar" }
+            ];
+
+            venues.forEach(venue => {
+                const statusColor = venue.status === 'live' ? '#00ff88' : venue.status === 'sync' ? '#ffd700' : 'var(--primary)';
+                const icon = L.divIcon({
+                    html: `<div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                        <div class="pulse-ring" style="border-color:${statusColor};"></div>
+                        <div class="pulse-marker" style="background:${statusColor};box-shadow:0 0 20px ${statusColor};"></div>
+                    </div>`,
+                    className: '',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+
+                const marker = L.marker([venue.lat, venue.lon], { icon })
+                    .addTo(this.state.map)
+                    .bindPopup(`
+                        <div class="venue-popup-content">
+                            <h3 style="color:var(--gold);">${venue.name}</h3>
+                            <small>${venue.status.toUpperCase()}</small>
+                            <br>
+                            <button class="venue-popup-btn" onclick="chatoo.openChat('${venue.name}');chatoo.state.map.closePopup();">
+                                💬 دخول المحادثة
+                            </button>
+                            <button class="venue-popup-btn" style="background:#ffd700;color:#000;margin-top:4px;" 
+                                onclick="chatoo.piPay(0.1,'Tip for ${venue.name}');chatoo.state.map.closePopup();">
+                                ☕ إكرامية 0.1 Pi
+                            </button>
+                        </div>
+                    `);
+
+                this.state.markers.push(marker);
+            });
+        },
+
+        addMapLegend() {
+            const container = document.getElementById('map-container');
+            if (!container || document.querySelector('.map-legend')) return;
+
+            const legend = document.createElement('div');
+            legend.className = 'map-legend';
+            legend.innerHTML = `
+                <div><span class="legend-dot live"></span> LIVE</div>
+                <div><span class="legend-dot active"></span> NODE ACTIVE</div>
+                <div><span class="legend-dot sync"></span> SYNC</div>
+            `;
+            container.appendChild(legend);
+        },
+
+        locateMe() {
+            if (!this.state.map) return;
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const { latitude, longitude } = pos.coords;
+                        this.state.map.setView([latitude, longitude], 15);
+                        
+                        if (this.state.userMarker) this.state.map.removeLayer(this.state.userMarker);
+                        const userIcon = L.divIcon({
+                            html: `<div style="width:20px;height:20px;background:#fff;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 16px var(--accent);"></div>`,
+                            className: '', iconSize: [20, 20], iconAnchor: [10, 10]
+                        });
+                        this.state.userMarker = L.marker([latitude, longitude], { icon: userIcon })
+                            .addTo(this.state.map).bindPopup('<b>📍 أنت هنا</b>').openPopup();
+                        
+                        this.gainXP(5);
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        },
+
+        mapZoomIn() {
+            if (this.state.map) this.state.map.zoomIn();
+        },
+
+        mapZoomOut() {
+            if (this.state.map) this.state.map.zoomOut();
+        },
+
+        toggleMapLayer() {
+            if (!this.state.map) return;
+            const btn = document.getElementById('layer-toggle-btn');
+            
+            if (this.state.currentLayer === 'dark') {
+                this.state.map.removeLayer(this.state.darkLayer);
+                this.state.satLayer.addTo(this.state.map);
+                this.state.currentLayer = 'sat';
+                if (btn) btn.textContent = '🌙';
+            } else {
+                this.state.map.removeLayer(this.state.satLayer);
+                this.state.darkLayer.addTo(this.state.map);
+                this.state.currentLayer = 'dark';
+                if (btn) btn.textContent = '🛰️';
+            }
+        },
+
+        // ═══════════════ RADAR STRIP ═══════════════
+        updateRadarStrip() {
+            const radar = document.getElementById('radar-list');
+            if (!radar) return;
+
+            radar.innerHTML = '';
+            const venues = window.chatooActions?.state?.nearbyVenues || [];
+
+            if (venues.length === 0) {
+                radar.innerHTML = '<div class="venue-node"><span>🔍 جاري البحث عن أماكن قريبة...</span></div>';
+                return;
+            }
+
+            venues.forEach(v => {
+                const node = document.createElement('div');
+                node.className = 'venue-node';
+                node.onclick = () => this.openChat(v.name);
+                node.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:22px;">🏛️</span>
+                        <div>
+                            <b style="font-size:12px;">${v.name}</b><br>
+                            <small style="color:${v.status === 'live' ? '#00ff88' : v.status === 'sync' ? '#ffd700' : 'var(--primary)'};">
+                                ⬤ ${v.status.toUpperCase()}
+                            </small>
+                        </div>
+                    </div>
+                `;
+                radar.appendChild(node);
+            });
+        },
+
+        // ═══════════════ MARQUEE ═══════════════
+        updateMarquee() {
+            const marquee = document.getElementById('marquee-content');
+            if (!marquee) return;
+
+            const venues = window.chatooActions?.state?.nearbyVenues || [];
+            if (venues.length > 0) {
+                marquee.textContent = venues.map(v => 
+                    `${v.name} (${v.status.toUpperCase()})`
+                ).join(' | ');
+            }
+        },
+
+        // ═══════════════ CHAT ═══════════════
+        openChat(venueName) {
+            this.state.room = venueName.replace(/\s+/g, '_');
+            document.getElementById('chat-venue-name').innerText = venueName;
+            
+            // عرض اسم المالك إذا كان موجوداً
+            const ownerName = sessionStorage.getItem(`venue_owner_${venueName}`) || 
+                             window.chatooAdmin?.venueOwners?.[venueName.toLowerCase().replace(/\s+/g, '_')] || '';
+            document.getElementById('chat-venue-owner').innerText = ownerName ? `👤 ${ownerName}` : '';
+            
+            document.getElementById('modal-chat').classList.add('active');
+            this.listenToMessages();
+            this.gainXP(REWARDS_CONFIG.xp.message);
+            
+            if (window.chatooNotif) window.chatooNotif.toast('💬 ' + venueName);
+        },
+
+        closeChat() {
+            if (this.state.sub) this.state.sub();
+            document.getElementById('modal-chat').classList.remove('active');
+        },
+
+        listenToMessages() {
+            if (!window.db) return;
+            const flow = document.getElementById('chat-flow');
+            
+            this.state.sub = window.db.collection("rooms_v2")
+                .doc(this.state.room)
+                .collection("m")
+                .orderBy("t", "asc")
+                .limitToLast(CHATOO_CONFIG.settings.messageHistoryLimit)
+                .onSnapshot(snap => {
+                    flow.innerHTML = "";
+                    snap.forEach(doc => {
+                        const m = doc.data();
+                        const div = document.createElement('div');
+                        
+                        if (m.type === 'gift') {
+                            div.className = "gift-notif";
+                            div.innerHTML = `🎁 ${m.val}`;
+                        } else {
+                            const isMe = m.u === (window.chatooAuth?.getRealUsername() || this.state.id);
+                            div.className = `msg ${isMe ? 'me' : 'them'}`;
+                            
+                            if (m.type === 'img') {
+                                div.innerHTML = `<img src="${m.val}" style="width:100%;border-radius:15px;" loading="lazy">`;
+                            } else if (m.type === 'audio') {
+                                div.innerHTML = `<audio controls src="${m.val}" style="width:200px;"></audio>`;
+                            } else {
+                                div.innerText = m.val;
+                            }
+                        }
+                        flow.appendChild(div);
+                    });
+                    flow.scrollTop = flow.scrollHeight;
+                });
+        },
+
+        async sendMsg() {
+            if (!window.db) return;
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const username = window.chatooAuth?.getRealUsername() || this.state.id;
+
+            await window.db.collection("rooms_v2")
+                .doc(this.state.room)
+                .collection("m")
+                .add({
+                    u: username,
+                    val: text,
+                    type: 'text',
+                    t: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+            input.value = "";
+            this.gainXP(REWARDS_CONFIG.xp.message);
+            
+            if (window.chatooAchievements) {
+                window.chatooAchievements.trackMessage();
+            }
+        },
+
+        // ═══════════════ PI PAYMENT ═══════════════
+        async piPay(amt, label) {
+            if (!this.state.piReady) {
+                Swal.fire({
+                    title: "Pi Browser مطلوب",
+                    text: "افتح التطبيق من متصفح Pi الرسمي",
+                    icon: "warning",
+                    background: "#121214",
+                    color: "#fff"
+                });
+                return;
+            }
+
+            try {
+                await Pi.createPayment(
+                    { amount: amt, memo: label, metadata: { uid: this.state.id } },
+                    {
+                        onReadyForServerApproval: id => console.log("Approval:", id),
+                        onReadyForServerCompletion: (id, tx) => {
+                            Swal.fire({
+                                title: "✅ تم الدفع!",
+                                text: `${amt} Pi - ${label}`,
+                                icon: "success",
+                                background: "#121214",
+                                color: "#fff"
+                            });
+
+                            if (this.state.room && window.db) {
+                                window.db.collection("rooms_v2")
+                                    .doc(this.state.room)
+                                    .collection("m")
+                                    .add({
+                                        u: window.chatooAuth?.getRealUsername() || this.state.id,
+                                        val: `💸 ${amt} Pi - ${label}`,
+                                        type: 'gift',
+                                        t: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                            }
+                        }
+                    }
+                );
+            } catch (e) {
+                console.error("Payment error:", e);
+            }
+        },
+
+        // ═══════════════ VOICE NOTE ═══════════════
+        async toggleVoiceNote() {
+            const mic = document.getElementById('mic-icon');
+            if (!this.state.recorder) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                this.state.recorder = new MediaRecorder(stream);
+                this.state.audioChunks = [];
+                this.state.recorder.ondataavailable = e => this.state.audioChunks.push(e.data);
+                this.state.recorder.onstop = async () => {
+                    if (!window.storage) return;
+                    const blob = new Blob(this.state.audioChunks, { type: 'audio/webm' });
+                    const ref = window.storage.ref(`voices/${Date.now()}`);
+                    await ref.put(blob);
+                    const url = await ref.getDownloadURL();
+                    if (window.db && this.state.room) {
+                        window.db.collection("rooms_v2").doc(this.state.room).collection("m").add({
+                            u: window.chatooAuth?.getRealUsername() || this.state.id,
+                            val: url,
+                            type: 'audio',
+                            t: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                };
+                this.state.recorder.start();
+                mic.textContent = '🔴';
+            } else {
+                this.state.recorder.stop();
+                this.state.recorder = null;
+                mic.textContent = '🎤';
+            }
+        },
+
+        async handleFileUpload(el) {
+            if (!el.files[0] || !window.storage) return;
+            Swal.fire({ title: 'جاري الرفع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const file = el.files[0];
+                const ref = window.storage.ref(`uploads/${Date.now()}_${file.name}`);
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+                if (window.db && this.state.room) {
+                    window.db.collection("rooms_v2").doc(this.state.room).collection("m").add({
+                        u: window.chatooAuth?.getRealUsername() || this.state.id,
+                        val: url,
+                        type: 'img',
+                        t: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                Swal.close();
+            } catch (err) {
+                Swal.fire({ title: "خطأ", text: "فشل رفع الصورة", icon: "error" });
+            } finally {
+                el.value = "";
+            }
+        },
+
+        async toggleAudioLive() {
+            const panel = document.getElementById('audio-panel');
+            if (!this.state.isAudioLive) {
+                try {
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    panel.style.display = 'flex';
+                    this.state.isAudioLive = true;
+                } catch (e) {
+                    Swal.fire({ title: "Mic Required", text: "Enable microphone", icon: "error" });
+                }
+            } else {
+                panel.style.display = 'none';
+                this.state.isAudioLive = false;
+            }
+        },
+
+        // ═══════════════ SHOP ═══════════════
+        renderShopProducts() {
+            const tabsContainer = document.getElementById('shop-tabs-container');
+            if (tabsContainer) {
+                tabsContainer.innerHTML = SHOP_CONFIG.categories.map((cat, i) => `
+                    <button class="shop-tab ${i === 0 ? 'active' : ''}" 
+                        onclick="chatoo.switchShopTab('${cat.id}', this)">
+                        ${cat.name}
+                    </button>
+                `).join('');
+            }
+
+            // توزيع المنتجات حسب الفئة
+            SHOP_CONFIG.categories.forEach(cat => {
+                const grid = document.getElementById(`shop-${cat.id}-grid`);
+                if (!grid) return;
+
+                const products = SHOP_CONFIG.products.filter(p => p.category === cat.id && p.active !== false);
+                grid.innerHTML = products.map(p => `
+                    <div class="shop-card ${cat.id === 'nfts' ? 'nft-card' : ''}" 
+                        onclick="chatoo.purchaseItem('${p.id}', ${p.price}, '${p.nameAr}', '${p.type}')">
+                        <div style="font-size:40px;text-align:center;">${p.nameAr.split(' ')[0]}</div>
+                        <h4 style="margin:8px 0;color:#fff;font-size:13px;">${p.nameAr}</h4>
+                        <small style="opacity:0.5;">${p.description}</small>
+                        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="color:var(--gold);font-weight:bold;">${p.price} π</span>
+                            <span style="background:${SHOP_CONFIG.rarity[p.rarity]?.color || '#888'}22;
+                                color:${SHOP_CONFIG.rarity[p.rarity]?.color || '#888'};
+                                padding:4px 10px;border-radius:12px;font-size:10px;">
+                                ${SHOP_CONFIG.rarity[p.rarity]?.label || p.rarity}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        },
+
+        switchShopTab(tab, btnElement) {
+            SHOP_CONFIG.categories.forEach(t => {
+                const grid = document.getElementById(`shop-${t.id}-grid`);
+                if (grid) grid.style.display = 'none';
+            });
+            const targetGrid = document.getElementById(`shop-${tab}-grid`);
+            if (targetGrid) targetGrid.style.display = 'grid';
+
+            document.querySelectorAll('.shop-tab').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'var(--glass)';
+            });
+            if (btnElement) {
+                btnElement.classList.add('active');
+                btnElement.style.background = 'var(--primary)';
+            }
+        },
+
+        claimDailyReward() {
+            const today = new Date().toDateString();
+            const lastClaim = localStorage.getItem('chatoo_last_claim');
+            
+            if (lastClaim === today) {
+                Swal.fire({ title: '⏰ تم الاستلام', text: 'عد غداً', icon: 'info', timer: 2000, showConfirmButton: false });
+                return;
+            }
+
+            const bonus = Math.floor(Math.random() * (REWARDS_CONFIG.dailyReward.maxXP - REWARDS_CONFIG.dailyReward.minXP + 1)) + REWARDS_CONFIG.dailyReward.minXP;
+            this.gainXP(bonus);
+            localStorage.setItem('chatoo_last_claim', today);
+            
+            Swal.fire({
+                title: '🎁 مكافأة يومية!',
+                html: `<p>+<strong style="color:#ffd700;font-size:24px;">${bonus} XP</strong></p>`,
+                icon: 'success',
+                background: "#121214",
+                color: "#fff",
+                confirmButtonColor: "#ffd700"
+            });
+        },
+
+        async purchaseItem(itemId, pricePi, itemName, itemType) {
+            if (!this.state.piReady) {
+                Swal.fire({ title: '⚠️ Pi Browser', text: 'افتح من Pi Browser', icon: 'warning' });
+                return;
+            }
+
+            const confirm = await Swal.fire({
+                title: `شراء ${itemName}`,
+                html: `<p>السعر: <strong style="color:#ffd700;">${pricePi} π</strong></p>`,
+                icon: 'question',
+                background: "#121214",
+                color: "#fff",
+                showCancelButton: true,
+                confirmButtonText: 'شراء',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: "#ffd700"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                await Pi.createPayment({
+                    amount: pricePi,
+                    memo: `Chatoo Shop - ${itemName}`,
+                    metadata: { itemId, userId: this.state.id }
+                }, {
+                    onReadyForServerCompletion: async (paymentId, txid) => {
+                        this.purchasedItems.push({
+                            id: itemId, name: itemName, price: pricePi,
+                            type: itemType, txid, date: new Date().toISOString(), active: true
+                        });
+                        localStorage.setItem('chatoo_inventory', JSON.stringify(this.purchasedItems));
+                        this.applyItemEffect(itemId, itemType);
+                        this.renderPurchaseHistory();
+                        this.renderInventory();
+                        
+                        if (window.chatooAchievements) {
+                            window.chatooAchievements.trackShopPurchase();
+                        }
+                        
+                        Swal.fire({ title: '🎉 تم الشراء!', text: itemName, icon: 'success' });
+                    }
+                });
+            } catch (e) {
+                console.error("Purchase error:", e);
+            }
+        },
+
+        applyItemEffect(itemId) {
+            switch (itemId) {
+                case 'xp_boost_2x':
+                    localStorage.setItem('chatoo_xp_mult', '2');
+                    break;
+                case 'name_color':
+                    const dn = document.getElementById('display-name');
+                    if (dn) { dn.style.color = '#ffd700'; dn.style.textShadow = '0 0 20px rgba(255,215,0,0.5)'; }
+                    break;
+                case 'golden_frame':
+                    const ac = document.querySelector('#modal-profile > div > div:nth-child(4)');
+                    if (ac) ac.style.background = 'conic-gradient(#ffd700 0%, #fff 25%, #ffd700 50%, #fff 75%, #ffd700 100%)';
+                    break;
+                case 'vip_access':
+                    const rl = document.getElementById('rank-label');
+                    if (rl) { rl.innerText = 'VIP MEMBER 👑'; rl.style.color = '#ffd700'; }
+                    break;
+            }
+        },
+
+        renderPurchaseHistory() {
+            const hd = document.getElementById('purchase-history');
+            if (!hd) return;
+            if (this.purchasedItems.length === 0) {
+                hd.innerHTML = '<small style="opacity:0.4;">لا توجد مشتريات</small>';
+                return;
+            }
+            hd.innerHTML = this.purchasedItems.slice(-10).reverse().map(item => `
+                <div class="purchase-history-item">
+                    <span>${item.name}</span>
+                    <span style="color:var(--gold);">${item.price} π</span>
+                </div>
+            `).join('');
+        },
+
+        clearPurchaseHistory() {
+            Swal.fire({
+                title: 'مسح السجل؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                cancelButtonText: 'لا',
+                confirmButtonColor: '#ff4757'
+            }).then(r => {
+                if (r.isConfirmed) {
+                    this.purchasedItems = [];
+                    localStorage.setItem('chatoo_inventory', '[]');
+                    this.renderPurchaseHistory();
+                }
+            });
+        },
+
+        renderInventory() {
+            const inv = document.getElementById('inventory-display');
+            if (!inv) return;
+            if (this.purchasedItems.length === 0) {
+                inv.innerHTML = '<small style="opacity:0.4;">لا توجد مقتنيات</small>';
+                return;
+            }
+            inv.innerHTML = this.purchasedItems.map(item => `
+                <span style="background:var(--surface);padding:6px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(255,215,0,0.2);">
+                    ${item.name}
+                </span>
+            `).join('');
+        },
+
+        // ═══════════════ XP SYSTEM ═══════════════
+        gainXP(n) {
+            const mult = parseInt(localStorage.getItem('chatoo_xp_mult') || '1');
+            const gained = Math.floor(n * mult);
+            this.state.xp += gained;
+            localStorage.setItem('chatoo_xp', this.state.xp);
+            this.updateXPUI();
+
+            const shopXpEl = document.getElementById('shop-xp-display');
+            if (shopXpEl) shopXpEl.innerText = this.state.xp;
+
+            if (window.chatooAchievements) {
+                window.chatooAchievements.trackXP(this.state.xp);
+            }
+
+            // Floating XP effect
+            const el = document.createElement('div');
+            el.textContent = `+${gained} XP`;
+            el.style.cssText = `
+                position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+                color:var(--gold);font-weight:900;font-size:22px;
+                pointer-events:none;z-index:9999;
+                animation:floatXP 1.5s ease-out forwards;
+                text-shadow:0 0 20px var(--gold);
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1600);
+        },
+
+        updateXPUI() {
+            const xp = this.state.xp;
+            document.getElementById('user-pts-display').innerText = xp;
+            document.getElementById('xp-val').innerText = xp;
+            document.getElementById('xp-indicator').style.width = (xp % 100) + "%";
+
+            let rank = REWARDS_CONFIG.ranks[0];
+            Object.entries(REWARDS_CONFIG.ranks).forEach(([threshold, title]) => {
+                if (xp >= parseInt(threshold)) rank = title;
+            });
+            document.getElementById('rank-label').innerText = rank;
+            document.getElementById('shop-rank-display').innerText = rank;
+        },
+
+        // ═══════════════ LOGOUT ═══════════════
+        logout() {
+            if (window.chatooAuth) window.chatooAuth.logout();
+            else {
+                localStorage.clear();
+                sessionStorage.clear();
+                location.reload();
+            }
+        }
+    };
+
+    // ═══════════════ BOOT ═══════════════
+    window.addEventListener('load', () => {
+        chatoo.init();
+        console.log('🚀 Chatoo Ultra Pro - Ready');
+    });
+
+    // ═══════════════ Global Error Handler ═══════════════
+    window.addEventListener('error', (e) => {
+        console.error('Chatoo Error:', e.error?.message || e.message);
+    });
+    </script>
+
+</body>
+</html>

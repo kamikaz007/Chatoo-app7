@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chatoo Mega Update | V4.0</title>
+    
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --pi-purple: #673ab7; --pi-gold: #ffca28; --glass: rgba(255, 255, 255, 0.05); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; font-family: 'Cairo', sans-serif; height: 100%; background: #000; color: white; overflow: hidden; }
+
+        /* الواجهة السينمائية (ثابتة) */
+        #landing-page {
+            height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200');
+            background-size: cover; background-position: center; text-align: center; z-index: 100; position: relative;
+        }
+        .logo-cinematic { font-size: clamp(60px, 15vw, 100px); font-weight: 900; color: var(--pi-gold); text-shadow: 0 0 30px rgba(255,202,40,0.5); }
+        .hero-btn { background: var(--pi-purple); border: none; padding: 22px 80px; font-size: 24px; border-radius: 60px; color: white; font-weight: 900; cursor: pointer; margin-top: 30px; }
+
+        /* الواجهة الرئيسية المظلمة */
+        #app-interface { display: none; height: 100vh; flex-direction: column; background: #0a0a0c; }
+        
+        /* شريط المتجر (جديد) */
+        .shop-bar { background: linear-gradient(90deg, #1a1a2e, #16213e); padding: 10px 20px; display: flex; gap: 15px; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid #333; }
+        .shop-item { background: var(--glass); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--pi-gold); }
+
+        /* الملف الشخصي المطور */
+        .profile-card { background: var(--glass); margin: 20px; padding: 20px; border-radius: 25px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .avatar { width: 60px; height: 60px; background: var(--pi-purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; }
+
+        /* نظام الدردشة */
+        #chat-room { display: none; position: fixed; inset: 0; background: #0a0a0c; z-index: 1000; flex-direction: column; }
+        .chat-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); backdrop-filter: blur(10px); }
+        .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 12px 18px; border-radius: 20px; max-width: 80%; font-size: 14px; position: relative; }
+        .msg.me { align-self: flex-end; background: var(--pi-purple); border-bottom-right-radius: 4px; }
+        .msg.other { align-self: flex-start; background: #25252b; border-bottom-left-radius: 4px; }
+        .pin-msg { background: #b71c1c; color: white; padding: 10px; text-align: center; font-size: 13px; font-weight: 800; border-bottom: 2px solid var(--pi-gold); }
+
+        .input-area { padding: 15px; display: flex; gap: 10px; background: #121216; }
+        .input-area input { flex: 1; background: #1e1e24; border: none; padding: 15px; border-radius: 30px; color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="landing-page">
+        <h1 class="logo-cinematic">Chatoo</h1>
+        <p style="opacity: 0.8; font-size: 18px;">التحديث العملاق: جيل جديد من التواصل</p>
+        <button class="hero-btn" onclick="startMegaAuth()">ابدأ الاستكشاف</button>
+    </div>
+
+    <div id="app-interface">
+        <div class="shop-bar">
+            <div class="shop-item">🛒 متجر الجوائز</div>
+            <div class="shop-item">⭐ ترقية VIP</div>
+            <div class="shop-item">🔥 تثبيت إعلان</div>
+            <div class="shop-item">🎁 هدايا Pi</div>
+        </div>
+
+        <div class="profile-card">
+            <div class="avatar" id="avatar-icon">?</div>
+            <div>
+                <span style="font-size: 12px; color: var(--pi-gold);" id="user-rank">مستكشف</span>
+                <div style="font-weight: 900; font-size: 20px;" id="pi-name">جاري التحقق...</div>
+                <div style="font-size: 14px; opacity: 0.7;" id="pi-points">رصيدك: 0 π</div>
+            </div>
+        </div>
+
+        <div style="padding: 0 20px;">
+            <h3 style="margin-bottom: 15px;">الغرف الموثقة</h3>
+            <div style="background: #1a1a20; border-radius: 25px; overflow: hidden; border: 1px solid #333;" onclick="enterRoom('ساحة كبار الشخصيات 💎')">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" style="width: 100%; height: 150px; object-fit: cover;">
+                <div style="padding: 15px;">
+                    <h4 style="margin: 0;">ساحة كبار الشخصيات</h4>
+                    <p style="font-size: 12px; color: #888;">أرسل رسالة واحصل على 20 نقطة جائزة!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-room">
+        <div class="chat-header">
+            <button onclick="leaveRoom()" style="background:none; border:none; color:white; font-size:25px;">✕</button>
+            <span id="room-title" style="font-weight: 900;">الدردشة</span>
+            <div style="width: 30px;"></div>
+        </div>
+        <div id="pin-area" class="pin-msg" style="display:none;"></div>
+        <div class="messages" id="chat-box"></div>
+        
+        <div id="owner-tools" style="display:none; padding: 10px; background: #1a1a20; gap: 10px;">
+            <input type="text" id="pin-input" placeholder="تثبيت إعلان صاحب المكان..." style="flex:1; background:#000; border:1px solid #444; color:white; padding:8px; border-radius:5px;">
+            <button onclick="setPin()" style="background:red; color:white; border:none; padding:5px 15px; border-radius:5px;">تثبيت</button>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="اكتب رسالتك الحقيقية...">
+            <button onclick="send()" style="background:var(--pi-gold); border:none; width:50px; height:50px; border-radius:50%; font-size:20px;">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeMHTibI7Q1tAToIMNtcoHeWbjhwYj6uQ",
+            authDomain: "chatoo-kouki.firebaseapp.com",
+            projectId: "chatoo-kouki",
+            storageBucket: "chatoo-kouki.firebasestorage.app",
+            messagingSenderId: "555587510833",
+            appId: "1:555587510833:web:b5e108dc90b05347a66b10"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentUser = "Guest";
+        let currentRoom = "";
+
+        async function startMegaAuth() {
+            try {
+                if(window.Pi) {
+                    await Pi.init({ version: "2.0", sandbox: true });
+                    const auth = await Pi.authenticate(["username"], (p)=>{});
+                    currentUser = auth.user.username;
+                }
+                showApp();
+            } catch(e) { showApp(); }
+        }
+
+        function showApp() {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('app-interface').style.display = 'flex';
+            document.getElementById('pi-name').innerText = "@" + currentUser;
+            document.getElementById('avatar-icon').innerText = currentUser[0].toUpperCase();
+            
+            db.collection("users").doc(currentUser).onSnapshot(doc => {
+                if(doc.exists) {
+                    const pts = doc.data().points || 0;
+                    document.getElementById('pi-points').innerText = "رصيدك: " + pts + " π";
+                    if(pts > 1000) document.getElementById('user-rank').innerText = "عضو ذهبي ⭐";
+                }
+            });
+        }
+
+        function enterRoom(name) {
+            currentRoom = name;
+            document.getElementById('chat-room').style.display = 'flex';
+            document.getElementById('room-title').innerText = name;
+            
+            // تحقق من ملكية الغرفة (مثال: kouki هو المالك)
+            if(currentUser === "kouki") document.getElementById('owner-tools').style.display = 'flex';
+
+            db.collection("rooms").doc(name).onSnapshot(doc => {
+                if(doc.exists && doc.data().pin) {
+                    document.getElementById('pin-area').style.display = 'block';
+                    document.getElementById('pin-area').innerText = "📢 " + doc.data().pin;
+                }
+            });
+
+            db.collection("rooms").doc(name).collection("msgs").orderBy("time","asc").onSnapshot(snap => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = "";
+                snap.forEach(d => {
+                    const m = d.data();
+                    const div = document.createElement('div');
+                    div.className = `msg ${m.user === currentUser ? 'me' : 'other'}`;
+                    div.innerHTML = `<b style="font-size:10px; display:block;">${m.user}</b>${m.text}`;
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        async function setPin() {
+            const val = document.getElementById('pin-input').value;
+            await db.collection("rooms").doc(currentRoom).set({ pin: val }, { merge: true });
+            document.getElementById('pin-input').value = "";
+        }
+
+        async function send() {
+            const inp = document.getElementById('msg-input');
+            if(!inp.value) return;
+            await db.collection("rooms").doc(currentRoom).collection("msgs").add({
+                user: currentUser, text: inp.value, time: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            db.collection("users").doc(currentUser).set({ points: firebase.firestore.FieldValue.increment(20) }, { merge: true });
+            inp.value = "";
+        }
+
+        function leaveRoom() { document.getElementById('chat-room').style.display = 'none'; }
+    </script>
+</body>
+</html>
+
