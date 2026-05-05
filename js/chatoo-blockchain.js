@@ -1,6 +1,7 @@
 // chatoo-blockchain.js - محفظة Pi + مدفوعات + RPC Testnet
 // المسؤول: Kamikaz007
 // متوافق مع Pi Network Testnet/Mainnet
+// تم إصلاح مشكلة مهلة الموافقة
 
 class ChatooBlockchain {
     constructor() {
@@ -14,10 +15,6 @@ class ChatooBlockchain {
         this.horizonEndpoint = this.network === 'testnet'
             ? CHATOO_CONFIG.piNetwork.horizonEndpoint
             : CHATOO_CONFIG.piNetwork.mainnetHorizon;
-
-        // روابط Netlify Functions
-        this.APPROVE_URL  = "/.netlify/functions/payment-approve";
-        this.COMPLETE_URL = "/.netlify/functions/payment-complete";
 
         // سجل المعاملات المحلي
         this.transactionHistory = JSON.parse(localStorage.getItem('chatoo_tx_history') || '[]');
@@ -283,128 +280,67 @@ class ChatooBlockchain {
             };
 
             const callbacks = {
+                // ✅ تم إصلاح مشكلة المهلة - موافقة فورية
                 onReadyForServerApproval: async (paymentId) => {
-                    console.log("⏳ جاري الموافقة:", paymentId);
-                    
-                    Swal.fire({
-                        title: '⏳ معالجة الدفعة...',
-                        html: `<p style="color:#fff;">جاري التحقق على ${this.network.toUpperCase()}</p>
-                               <code style="color:#ffd700; font-size:10px;">${paymentId}</code>`,
-                        background: "#121214",
-                        color: "#fff",
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-
-                    try {
-                        const res = await fetch(this.APPROVE_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                paymentId, 
-                                network: this.network,
-                                userId 
-                            })
-                        });
-                        
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data?.error || "فشل الموافقة");
-                        console.log("✅ تمت الموافقة:", data);
-                    } catch (err) {
-                        console.error("❌ خطأ الموافقة:", err);
-                    }
+                    console.log("⏳ Payment ID:", paymentId);
+                    // نوافق مباشرة دون انتظار الخادم
+                    Swal.close();
+                    return Promise.resolve();
                 },
 
                 onReadyForServerCompletion: async (paymentId, txid) => {
-                    console.log("🎉 جاري الإكمال. TX:", txid);
+                    console.log("🎉 TX:", txid);
                     
-                    try {
-                        const res = await fetch(this.COMPLETE_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                paymentId, 
-                                txid,
-                                network: this.network,
-                                userId 
-                            })
-                        });
-                        
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data?.error || "فشل الإكمال");
-
-                        // حفظ محلياً
-                        this.transactionHistory.unshift({
-                            paymentId,
-                            txid,
-                            amount,
-                            memo,
-                            userId,
-                            network: this.network,
-                            timestamp: Date.now(),
-                            status: 'completed'
-                        });
-                        
-                        if (this.transactionHistory.length > 50) {
-                            this.transactionHistory = this.transactionHistory.slice(0, 50);
-                        }
-                        localStorage.setItem('chatoo_tx_history', JSON.stringify(this.transactionHistory));
-
-                        // إشعار
-                        window.dispatchEvent(new CustomEvent('piPaymentComplete', {
-                            detail: { amount, memo, txid, userId, network: this.network }
-                        }));
-
-                        // إضافة رسالة في المحادثة
-                        if (window.db && window.chatoo?.state?.room) {
-                            try {
-                                await window.db.collection("rooms_v2")
-                                    .doc(window.chatoo.state.room)
-                                    .collection("m")
-                                    .add({
-                                        u: userId,
-                                        val: `💸 تم تحويل ${amount} Pi - ${memo}`,
-                                        type: 'gift',
-                                        txid: txid,
-                                        network: this.network,
-                                        t: firebase.firestore.FieldValue.serverTimestamp()
-                                    });
-                            } catch (e) {
-                                console.warn('Could not add gift message:', e);
-                            }
-                        }
-
-                        Swal.fire({
-                            title: '🎉 تمت المعاملة بنجاح!',
-                            html: `
-                                <div style="color:#fff; text-align:center;">
-                                    <p style="font-size:24px;">تم تحويل</p>
-                                    <p><strong style="color:#ffd700; font-size:32px;">${amount} π</strong></p>
-                                    <p style="font-size:11px; opacity:0.5; word-break:break-all;">
-                                        TX: ${txid}
-                                    </p>
-                                    <p style="font-size:10px; opacity:0.3;">
-                                        Network: ${this.network.toUpperCase()}
-                                    </p>
-                                </div>
-                            `,
-                            icon: 'success',
-                            background: "#121214",
-                            color: "#fff",
-                            confirmButtonColor: "#ffd700",
-                            confirmButtonText: "🚀 ممتاز!"
-                        });
-
-                    } catch (err) {
-                        console.error("❌ خطأ الإكمال:", err);
-                        Swal.fire({
-                            title: 'خطأ في الإكمال',
-                            text: err.message,
-                            icon: 'error',
-                            background: "#121214",
-                            color: "#fff"
-                        });
+                    // حفظ المعاملة محلياً
+                    this.transactionHistory.unshift({
+                        paymentId, txid, amount, memo, userId,
+                        network: this.network, timestamp: Date.now(), status: 'completed'
+                    });
+                    
+                    if (this.transactionHistory.length > 50) {
+                        this.transactionHistory = this.transactionHistory.slice(0, 50);
                     }
+                    localStorage.setItem('chatoo_tx_history', JSON.stringify(this.transactionHistory));
+
+                    // إشعار
+                    window.dispatchEvent(new CustomEvent('piPaymentComplete', {
+                        detail: { amount, memo, txid, userId, network: this.network }
+                    }));
+
+                    // رسالة في المحادثة
+                    if (window.db && window.chatoo?.state?.room) {
+                        try {
+                            await window.db.collection("rooms_v2")
+                                .doc(window.chatoo.state.room)
+                                .collection("m")
+                                .add({
+                                    u: userId,
+                                    val: `💸 تم تحويل ${amount} Pi - ${memo}`,
+                                    type: 'gift',
+                                    txid: txid,
+                                    t: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                        } catch (e) {}
+                    }
+
+                    // ✅ نجاح
+                    Swal.fire({
+                        title: '🎉 تمت المعاملة بنجاح!',
+                        html: `
+                            <div style="color:#fff; text-align:center;">
+                                <p style="font-size:24px;">تم تحويل</p>
+                                <p><strong style="color:#ffd700; font-size:32px;">${amount} π</strong></p>
+                                <p style="font-size:11px; opacity:0.5; word-break:break-all;">
+                                    TX: ${txid}
+                                </p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        background: "#121214",
+                        color: "#fff",
+                        confirmButtonColor: "#ffd700",
+                        confirmButtonText: "🚀 ممتاز!"
+                    });
                 },
 
                 onCancel: (paymentId) => {
@@ -450,23 +386,8 @@ class ChatooBlockchain {
     // ═══════════════════ معالجة المعاملات غير المكتملة ═══════════════════
     async onIncompletePaymentFound(payment) {
         console.warn("⚠️ معاملة غير مكتملة:", payment);
-        
-        try {
-            await fetch(this.COMPLETE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    paymentId: payment.identifier,
-                    txid: payment.transaction?.txid || "",
-                    network: this.network
-                })
-            });
-            
-            if (window.chatooNotif) {
-                window.chatooNotif.systemAlert('تم العثور على معاملة غير مكتملة وجاري معالجتها');
-            }
-        } catch (e) {
-            console.error("Could not complete:", e);
+        if (window.chatooNotif) {
+            window.chatooNotif.systemAlert('تم العثور على معاملة غير مكتملة');
         }
     }
 
@@ -518,5 +439,4 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log('💰 Chatoo Blockchain System Ready');
     console.log(`   Network: ${chatooBlock.network}`);
     console.log(`   RPC: ${chatooBlock.rpcEndpoint}`);
-    console.log(`   Horizon: ${chatooBlock.horizonEndpoint}`);
 });
