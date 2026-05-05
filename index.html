@@ -1217,54 +1217,7 @@
         },
 
         // ═══════════════ PI PAYMENT ═══════════════
-        async piPay(amt, label) {
-            if (!this.state.piReady) {
-                Swal.fire({
-                    title: "Pi Browser مطلوب",
-                    text: "افتح التطبيق من متصفح Pi الرسمي",
-                    icon: "warning",
-                    background: "#121214",
-                    color: "#fff"
-                });
-                return;
-            }
-          
-       
-    await Pi.authenticate(['payments'], (payment) => {
-        console.warn('Incomplete:', payment);
-    });
-            try {
-                await Pi.createPayment(
-                    { amount: amt, memo: label, metadata: { uid: this.state.id } },
-                    {
-                        onReadyForServerApproval: id => console.log("Approval:", id),
-                        onReadyForServerCompletion: (id, tx) => {
-                            Swal.fire({
-                                title: "✅ تم الدفع!",
-                                text: `${amt} Pi - ${label}`,
-                                icon: "success",
-                                background: "#121214",
-                                color: "#fff"
-                            });
-
-                            if (this.state.room && window.db) {
-                                window.db.collection("rooms_v2")
-                                    .doc(this.state.room)
-                                    .collection("m")
-                                    .add({
-                                        u: window.chatooAuth?.getRealUsername() || this.state.id,
-                                        val: `💸 ${amt} Pi - ${label}`,
-                                        type: 'gift',
-                                        t: firebase.firestore.FieldValue.serverTimestamp()
-                                    });
-                            }
-                        }
-                    }
-                );
-            } catch (e) {
-                console.error("Payment error:", e);
-            }
-        },
+    
 
         // ═══════════════ VOICE NOTE ═══════════════
         async toggleVoiceNote() {
@@ -1273,7 +1226,7 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 this.state.recorder = new MediaRecorder(stream);
                 this.state.audioChunks = [];
-                this.state.recorder.ondataavailable = e => this.state.audioChunks.push(e.data);
+                this.state.recorder.ondataavailable = e => this.state.audi.push(e.data);
                 this.state.recorder.onstop = async () => {
                     if (!window.storage) return;
                     const blob = new Blob(this.state.audioChunks, { type: 'audio/webm' });
