@@ -281,12 +281,13 @@ class ChatooBlockchain {
 
             const callbacks = {
                 // ✅ تم إصلاح مشكلة المهلة - موافقة فورية
-                onReadyForServerApproval: async (paymentId) => {
-                    console.log("⏳ Payment ID:", paymentId);
-                    // نوافق مباشرة دون انتظار الخادم
-                    Swal.close();
-                    return Promise.resolve();
-                },
+                onReadyForServerApproval: (paymentId) => {
+                  console.log("⏳ Payment ID:", paymentId);
+                  // ✅ أغلق أي نافذة مفتوحة
+               Swal.close();
+               // ✅ أرجع resolve فوراً (بدون async)
+              return Promise.resolve({ success: true, paymentId });
+},
 
                 onReadyForServerCompletion: async (paymentId, txid) => {
                     console.log("🎉 TX:", txid);
