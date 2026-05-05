@@ -1,0 +1,22 @@
+{
+  "name": "chatoo-app7",
+  "version": "2.0.0",
+  "description": "Chatoo Ultra Pro - Web3 Social Network on Pi Network",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required - Static HTML App'",
+    "start": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "pi-network",
+    "web3",
+    "social",
+    "chat",
+    "blockchain"
+  ],
+  "author": "Kamikaz007",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^11.0.0"
+  }
+}
