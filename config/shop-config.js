@@ -35,7 +35,7 @@ const SHOP_CONFIG = {
             type: "frame",
             category: "items",
             rarity: "legendary",
-            active: true
+            active: false
         },
         {
             id: "name_color",
