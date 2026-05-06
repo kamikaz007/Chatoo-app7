@@ -1,10 +1,14 @@
+// netlify/functions/payment-approve.js
+// المسؤول: Kamikaz007
+
 exports.handler = async (event) => {
     const { paymentId } = JSON.parse(event.body);
     console.log('📥 paymentId received:', paymentId);
 
     try {
+        // ✅ Pi Platform API الصحيح
         const res = await fetch(
-            `https://api.testnet.minepi.com/v2/payments/${paymentId}/approve`,
+            `https://api.minepi.com/v2/payments/${paymentId}/approve`,
             {
                 method: 'POST',
                 headers: {
@@ -15,11 +19,18 @@ exports.handler = async (event) => {
         );
 
         const data = await res.json();
-        
-        // ✅ Log كامل
         console.log('📤 Pi API status:', res.status);
         console.log('📤 Pi API response:', JSON.stringify(data));
 
+        if (!res.ok) {
+            console.error('❌ Approve failed:', data);
+            return {
+                statusCode: res.status,
+                body: JSON.stringify({ error: data })
+            };
+        }
+
+        console.log('✅ Payment approved:', paymentId);
         return {
             statusCode: 200,
             body: JSON.stringify({ paymentId, approved: true, ...data })
