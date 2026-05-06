@@ -4,6 +4,9 @@
 exports.handler = async (event) => {
     const { paymentId } = JSON.parse(event.body);
     console.log('📥 paymentId received:', paymentId);
+    
+    console.log('🔑 API Key exists:', !!process.env.PI_API_KEY);
+console.log('🔑 API Key length:', process.env.PI_API_KEY?.length);
 
     try {
         // ✅ Pi Platform API الصحيح
