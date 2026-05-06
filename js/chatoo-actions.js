@@ -1,5 +1,4 @@
 // chatoo-actions.js - Cinematic UI Web3 + عقد عائمة حقيقية
-// مع إصلاح المحفظة لتجنب تعارض المصادقة
 // المسؤول: Kamikaz007
 
 const PI_HORIZONS = [
@@ -36,7 +35,7 @@ class ChatooActions {
         this.setupCustomNavButtons();
         this.startLocationTracking();
         buildWalletModal();
-        
+
         if (window.chatooNotif) {
             window.chatooNotif.systemAlert('واجهة Chatoo السينمائية نشطة');
         }
@@ -68,10 +67,10 @@ class ChatooActions {
         const oldLat = this.state.userLocation?.lat;
         const oldLon = this.state.userLocation?.lon;
 
-        if (!oldLat || !oldLon || 
+        if (!oldLat || !oldLon ||
             this._calculateDistance(oldLat, oldLon, latitude, longitude) > 100 ||
             Date.now() - this.state.lastFetchTime > 60000) {
-            
+
             this.state.userLocation = { lat: latitude, lon: longitude };
             this._fetchNearbyVenues(latitude, longitude);
         }
@@ -95,19 +94,21 @@ class ChatooActions {
 
     async _fetchNearbyVenues(lat, lon) {
         console.log(`📍 جلب الأماكن القريبة من ${lat.toFixed(4)}, ${lon.toFixed(4)}...`);
-        
+
         const query = `[out:json];
             node["amenity"~"cafe|restaurant|bar|fast_food|pub|hotel|bakery"]
             (around:${CHATOO_CONFIG.map.searchRadius},${lat},${lon});
             out body 12;`;
 
         try {
-            const response = await fetch(`${CHATOO_CONFIG.map.overpassEndpoint}?data=${encodeURIComponent(query)}`);
-            
+            const response = await fetch(
+                `${CHATOO_CONFIG.map.overpassEndpoint}?data=${encodeURIComponent(query)}`
+            );
+
             if (!response.ok) throw new Error('Overpass API failed');
-            
+
             const data = await response.json();
-            
+
             if (data.elements && data.elements.length > 0) {
                 this.state.nearbyVenues = data.elements
                     .filter(v => v.tags && v.tags.name)
@@ -126,12 +127,21 @@ class ChatooActions {
 
                 this.state.lastFetchTime = Date.now();
                 this.renderFloatingNodes();
-                
+
                 console.log(`✅ تم جلب ${this.state.nearbyVenues.length} مكاناً قريباً`);
-                
+
                 if (window.chatooNotif && this.state.nearbyVenues.length > 0) {
-                    window.chatooNotif.toast(`📍 تم العثور على ${this.state.nearbyVenues.length} أماكن قريبة`);
+                    window.chatooNotif.toast(
+                        `📍 تم العثور على ${this.state.nearbyVenues.length} أماكن قريبة`
+                    );
                 }
+
+                // تحديث الـ radar و marquee
+                if (typeof chatoo !== 'undefined') {
+                    chatoo.updateRadarStrip();
+                    chatoo.updateMarquee();
+                }
+
             } else {
                 this._useDefaultVenues();
             }
@@ -142,11 +152,9 @@ class ChatooActions {
     }
 
     _determineStatus(tags) {
-        const now = new Date();
-        const hour = now.getHours();
+        const hour = new Date().getHours();
         if (tags.opening_hours) {
-            if (hour >= 8 && hour <= 23) return 'active';
-            return 'inactive';
+            return (hour >= 8 && hour <= 23) ? 'active' : 'inactive';
         }
         const statuses = ['active', 'live', 'active', 'active', 'active'];
         return statuses[Math.floor(Math.random() * statuses.length)];
@@ -162,29 +170,68 @@ class ChatooActions {
             { name: "Node 007", type: "cafe", lat: 36.8200, lon: 10.1900, status: "active" }
         ];
         this.renderFloatingNodes();
+
+        if (typeof chatoo !== 'undefined') {
+            chatoo.updateRadarStrip();
+            chatoo.updateMarquee();
+        }
     }
 
+    // ═══════════════════ CSS ═══════════════════
     injectCinematicStyles() {
         if (document.getElementById('chatoo-cinematic-css')) return;
         const style = document.createElement('style');
         style.id = 'chatoo-cinematic-css';
         style.innerHTML = `
-            :root { --gold: #ffd700; --gold-glow: 0 0 15px rgba(255, 215, 0, 0.4); --purple: #8257e5; --green-active: #00FF88; }
             .floating-node {
-                position: fixed; width: 90px; height: 90px; border-radius: 50%;
+                position: fixed;
+                width: 90px; height: 90px;
+                border-radius: 50%;
                 background: radial-gradient(circle at 35% 35%, rgba(130,87,229,0.35), rgba(9,9,11,0.92) 70%);
-                border: 1.5px solid rgba(255,215,0,0.6); box-shadow: 0 0 18px rgba(255,215,0,0.25), inset 0 0 12px rgba(130,87,229,0.2);
-                display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-                color: #fff; cursor: pointer; z-index: 400; backdrop-filter: blur(8px);
-                transition: all 0.3s ease; will-change: transform; touch-action: none; user-select: none; text-decoration: none;
+                border: 1.5px solid rgba(255,215,0,0.6);
+                box-shadow: 0 0 18px rgba(255,215,0,0.25), inset 0 0 12px rgba(130,87,229,0.2);
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                gap: 3px; color: #fff; cursor: pointer;
+                z-index: 400; backdrop-filter: blur(8px);
+                transition: all 0.3s ease;
+                will-change: transform;
+                touch-action: none; user-select: none;
             }
-            .floating-node::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid rgba(255,215,0,0.2); animation: ringPulse 3s ease-in-out infinite; }
-            .floating-node::after { content: ''; position: absolute; inset: -10px; border-radius: 50%; border: 1px solid rgba(130,87,229,0.15); animation: ringPulse 3s ease-in-out infinite 1.5s; }
-            @keyframes ringPulse { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.15); opacity: 0; } }
-            .floating-node:hover, .floating-node:active { border-color: #fff; box-shadow: 0 0 35px rgba(255,215,0,0.6), 0 0 60px rgba(130,87,229,0.3), inset 0 0 20px rgba(255,215,0,0.1); transform: scale(1.08); }
+            .floating-node::before {
+                content: ''; position: absolute; inset: -4px;
+                border-radius: 50%;
+                border: 1px solid rgba(255,215,0,0.2);
+                animation: ringPulse 3s ease-in-out infinite;
+            }
+            .floating-node::after {
+                content: ''; position: absolute; inset: -10px;
+                border-radius: 50%;
+                border: 1px solid rgba(130,87,229,0.15);
+                animation: ringPulse 3s ease-in-out infinite 1.5s;
+            }
+            @keyframes ringPulse {
+                0%, 100% { transform: scale(1); opacity: 0.6; }
+                50% { transform: scale(1.15); opacity: 0; }
+            }
+            .floating-node:hover, .floating-node:active {
+                border-color: #fff;
+                box-shadow: 0 0 35px rgba(255,215,0,0.6),
+                            0 0 60px rgba(130,87,229,0.3),
+                            inset 0 0 20px rgba(255,215,0,0.1);
+                transform: scale(1.08);
+            }
             .node-icon { font-size: 22px; line-height: 1; filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)); }
-            .node-name { font-size: 8px; font-weight: 700; text-align: center; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; color: var(--gold); letter-spacing: 0.3px; }
-            .node-status { font-size: 7px; color: var(--green-active); font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; }
+            .node-name {
+                font-size: 8px; font-weight: 700; text-align: center;
+                padding: 0 4px; white-space: nowrap; overflow: hidden;
+                text-overflow: ellipsis; max-width: 80px;
+                color: #ffd700; letter-spacing: 0.3px;
+            }
+            .node-status {
+                font-size: 7px; color: #00FF88;
+                font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+            }
             .fn-0 { animation: float0 7s ease-in-out infinite; }
             .fn-1 { animation: float1 9s ease-in-out infinite; }
             .fn-2 { animation: float2 8s ease-in-out infinite; }
@@ -193,47 +240,35 @@ class ChatooActions {
             .fn-5 { animation: float5 11s ease-in-out infinite; }
             .fn-6 { animation: float6 8.5s ease-in-out infinite; }
             .fn-7 { animation: float7 9.5s ease-in-out infinite; }
-            @keyframes float0 { 0%,100% { transform: translate(0,0) rotate(0deg); } 25% { transform: translate(8px,-14px) rotate(2deg); } 50% { transform: translate(-5px,-8px) rotate(-1deg); } 75% { transform: translate(10px,6px) rotate(1.5deg); } }
-            @keyframes float1 { 0%,100% { transform: translate(0,0) rotate(0deg); } 30% { transform: translate(-12px,-10px) rotate(-2deg); } 60% { transform: translate(7px,-18px) rotate(1deg); } 80% { transform: translate(-4px,8px) rotate(-1deg); } }
-            @keyframes float2 { 0%,100% { transform: translate(0,0); } 20% { transform: translate(14px,-6px) rotate(2deg); } 55% { transform: translate(-8px,-16px) rotate(-1.5deg); } 80% { transform: translate(5px,10px) rotate(1deg); } }
-            @keyframes float3 { 0%,100% { transform: translate(0,0) rotate(0deg); } 35% { transform: translate(-10px,12px) rotate(-2deg); } 65% { transform: translate(12px,-10px) rotate(2deg); } }
-            @keyframes float4 { 0%,100% { transform: translate(0,0); } 40% { transform: translate(10px,-12px) rotate(1.5deg); } 70% { transform: translate(-14px,6px) rotate(-2deg); } }
-            @keyframes float5 { 0%,100% { transform: translate(0,0) rotate(0deg); } 30% { transform: translate(-6px,-18px) rotate(-1deg); } 60% { transform: translate(12px,8px) rotate(2deg); } 85% { transform: translate(-8px,-4px) rotate(-1.5deg); } }
-            @keyframes float6 { 0%,100% { transform: translate(0,0) rotate(0deg); } 25% { transform: translate(-15px,-5px) rotate(3deg); } 50% { transform: translate(3px,-12px) rotate(-2deg); } 75% { transform: translate(12px,8px) rotate(1deg); } }
-            @keyframes float7 { 0%,100% { transform: translate(0,0) rotate(0deg); } 35% { transform: translate(8px,-16px) rotate(-3deg); } 65% { transform: translate(-10px,14px) rotate(2deg); } }
-            .node-ripple { position: fixed; border-radius: 50%; border: 2px solid rgba(255,215,0,0.8); pointer-events: none; z-index: 9999; animation: nodeRippleAnim 0.6s ease-out forwards; }
-            @keyframes nodeRippleAnim { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
-            .nav-btn.wallet-active { opacity: 1 !important; color: var(--gold) !important; transform: translateY(-8px) !important; text-shadow: 0 0 20px var(--gold) !important; }
+            @keyframes float0 { 0%,100%{transform:translate(0,0) rotate(0deg)} 25%{transform:translate(8px,-14px) rotate(2deg)} 50%{transform:translate(-5px,-8px) rotate(-1deg)} 75%{transform:translate(10px,6px) rotate(1.5deg)} }
+            @keyframes float1 { 0%,100%{transform:translate(0,0) rotate(0deg)} 30%{transform:translate(-12px,-10px) rotate(-2deg)} 60%{transform:translate(7px,-18px) rotate(1deg)} 80%{transform:translate(-4px,8px) rotate(-1deg)} }
+            @keyframes float2 { 0%,100%{transform:translate(0,0)} 20%{transform:translate(14px,-6px) rotate(2deg)} 55%{transform:translate(-8px,-16px) rotate(-1.5deg)} 80%{transform:translate(5px,10px) rotate(1deg)} }
+            @keyframes float3 { 0%,100%{transform:translate(0,0) rotate(0deg)} 35%{transform:translate(-10px,12px) rotate(-2deg)} 65%{transform:translate(12px,-10px) rotate(2deg)} }
+            @keyframes float4 { 0%,100%{transform:translate(0,0)} 40%{transform:translate(10px,-12px) rotate(1.5deg)} 70%{transform:translate(-14px,6px) rotate(-2deg)} }
+            @keyframes float5 { 0%,100%{transform:translate(0,0) rotate(0deg)} 30%{transform:translate(-6px,-18px) rotate(-1deg)} 60%{transform:translate(12px,8px) rotate(2deg)} 85%{transform:translate(-8px,-4px) rotate(-1.5deg)} }
+            @keyframes float6 { 0%,100%{transform:translate(0,0) rotate(0deg)} 25%{transform:translate(-15px,-5px) rotate(3deg)} 50%{transform:translate(3px,-12px) rotate(-2deg)} 75%{transform:translate(12px,8px) rotate(1deg)} }
+            @keyframes float7 { 0%,100%{transform:translate(0,0) rotate(0deg)} 35%{transform:translate(8px,-16px) rotate(-3deg)} 65%{transform:translate(-10px,14px) rotate(2deg)} }
+            .node-ripple {
+                position: fixed; border-radius: 50%;
+                border: 2px solid rgba(255,215,0,0.8);
+                pointer-events: none; z-index: 9999;
+                animation: nodeRippleAnim 0.6s ease-out forwards;
+            }
+            @keyframes nodeRippleAnim {
+                0%   { transform: scale(0.5); opacity: 1; }
+                100% { transform: scale(3); opacity: 0; }
+            }
         `;
         document.head.appendChild(style);
     }
 
+    // ═══════════════════ أزرار التنقل - لا تضيف شيئاً، الأزرار في HTML ═══════════════════
     setupCustomNavButtons() {
-        const navBar = document.querySelector("nav");
-        if (!navBar) return;
-
-        ["btn-wallet-custom", "btn-settings-custom"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-        });
-
-        const walletBtn = document.createElement("div");
-        walletBtn.id = "btn-wallet-custom";
-        walletBtn.className = "nav-btn";
-        walletBtn.innerHTML = "💳";
-        walletBtn.title = "محفظة Pi";
-        walletBtn.onclick = () => openWallet();
-        navBar.appendChild(walletBtn);
-
-        const settingsBtn = document.createElement("div");
-        settingsBtn.id = "btn-settings-custom";
-        settingsBtn.className = "nav-btn";
-        settingsBtn.innerHTML = "⚙️";
-        settingsBtn.title = "الإعدادات";
-        settingsBtn.onclick = () => openSettingsModal();
-        navBar.appendChild(settingsBtn);
+        // ✅ الأزرار موجودة مباشرة في HTML - لا حاجة لإضافة ديناميكية
+        console.log('✅ Nav buttons ready in HTML');
     }
 
+    // ═══════════════════ عرض العقد العائمة ═══════════════════
     renderFloatingNodes() {
         document.querySelectorAll('.floating-node').forEach(el => el.remove());
 
@@ -290,7 +325,7 @@ class ChatooActions {
     _nodeRipple(e) {
         const r = document.createElement('div');
         r.className = 'node-ripple';
-        r.style.cssText = `left: ${e.clientX - 45}px; top: ${e.clientY - 45}px; width: 90px; height: 90px;`;
+        r.style.cssText = `left:${e.clientX - 45}px;top:${e.clientY - 45}px;width:90px;height:90px;`;
         document.body.appendChild(r);
         setTimeout(() => r.remove(), 650);
     }
@@ -304,7 +339,8 @@ class ChatooActions {
             Swal.fire({
                 title: `⚡ ${venueName}`,
                 text: ownerName ? `المالك: ${ownerName}` : 'جاري الاتصال بالعقدة...',
-                background: "#121214", color: "#fff", confirmButtonColor: "#ffd700",
+                background: "#121214", color: "#fff",
+                confirmButtonColor: "#ffd700",
                 timer: 2000, timerProgressBar: true
             });
         }
@@ -317,10 +353,15 @@ function buildWalletModal() {
 
     const modal = document.createElement("div");
     modal.id = "wallet-modal";
-    modal.style.cssText = `position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.92); backdrop-filter:blur(22px); display:none; align-items:center; justify-content:center; padding:20px; font-family:'Inter',system-ui,sans-serif;`;
+    modal.style.cssText = `
+        position:fixed; inset:0; z-index:9000;
+        background:rgba(0,0,0,0.92); backdrop-filter:blur(22px);
+        display:none; align-items:center; justify-content:center;
+        padding:20px; font-family:'Inter',system-ui,sans-serif;
+    `;
 
     modal.innerHTML = `
-      <div style="width:100%; max-width:390px; background:linear-gradient(160deg,#0d1117,#161b27); border:1px solid rgba(255,215,0,0.18); border-radius:32px; padding:28px 24px; box-shadow:0 40px 100px rgba(0,0,0,0.95); position:relative; overflow:hidden;">
+      <div style="width:100%;max-width:390px;background:linear-gradient(160deg,#0d1117,#161b27);border:1px solid rgba(255,215,0,0.18);border-radius:32px;padding:28px 24px;box-shadow:0 40px 100px rgba(0,0,0,0.95);position:relative;overflow:hidden;">
         <button onclick="closeWallet()" style="position:absolute;top:16px;left:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:15px;cursor:pointer;">✕</button>
         <div style="text-align:center;margin-bottom:22px;padding-top:4px;">
           <div style="font-size:42px;margin-bottom:6px;">🥧</div>
@@ -348,114 +389,154 @@ function buildWalletModal() {
 function openWallet() {
     if (!document.getElementById("wallet-modal")) buildWalletModal();
     document.getElementById("wallet-modal").style.display = "flex";
+
     const token = sessionStorage.getItem("pi_token");
     const user = sessionStorage.getItem("pi_user");
     const address = sessionStorage.getItem("pi_address");
+
     if (token && user) {
         showBalanceCard(user);
         if (address && window.chatooBlock) {
             window.chatooBlock.getAccountBalance(address).then(result => {
                 showBalance(result.balance, address);
-            });
+            }).catch(() => showBalance(0, address));
         }
     }
 }
 
 function closeWallet() {
-    document.getElementById("wallet-modal").style.display = "none";
+    const modal = document.getElementById("wallet-modal");
+    if (modal) modal.style.display = "none";
 }
 
 async function connectWallet() {
     if (typeof Pi === 'undefined') {
-        document.getElementById("w-message").innerHTML = '⚠️ يجب فتح التطبيق من <b style="color:#ffd700">Pi Browser</b>';
+        document.getElementById("w-message").innerHTML =
+            '⚠️ يجب فتح التطبيق من <b style="color:#ffd700">Pi Browser</b>';
         return;
     }
 
-    // ✅ استخدم الجلسة المخزنة إذا وجدت، وإلا مصادقة واحدة
     const savedUser = sessionStorage.getItem("pi_user");
     const savedAddr = sessionStorage.getItem("pi_address");
 
     if (savedUser) {
         showBalanceCard(savedUser);
-        if (savedAddr && window.chatooBlock && window.chatooBlock.getAccountBalance) {
+        if (savedAddr && window.chatooBlock) {
             try {
                 const result = await window.chatooBlock.getAccountBalance(savedAddr);
                 showBalance(result.balance, savedAddr);
             } catch (e) {
-                showBalance(100.00, savedAddr);
+                showBalance(0, savedAddr);
             }
-        } else {
-            showBalance(100.00, savedAddr || 'G-TESTNET');
         }
         if (window.chatooNotif) window.chatooNotif.toast('✅ محفظة (جلسة محفوظة)');
         return;
     }
 
-    // مصادقة جديدة فقط إذا لم توجد جلسة
     try {
-        const auth = await Pi.authenticate(["username", "payments"], (p) => console.warn("Incomplete:", p));
+        const auth = await Pi.authenticate(
+            ["username", "payments"],
+            (p) => console.warn("Incomplete:", p)
+        );
         const username = auth.user.username;
         const address = auth.user.wallet_address || auth.user.uid;
+
         sessionStorage.setItem("pi_token", auth.accessToken);
         sessionStorage.setItem("pi_user", username);
         if (address) sessionStorage.setItem("pi_address", address);
+
         showBalanceCard(username);
-        if (address && window.chatooBlock && window.chatooBlock.getAccountBalance) {
-            const result = await window.chatooBlock.getAccountBalance(address);
-            showBalance(result.balance, address);
-        } else {
-            showBalance(100.00, address || 'G-TESTNET');
+
+        if (address && window.chatooBlock) {
+            try {
+                const result = await window.chatooBlock.getAccountBalance(address);
+                showBalance(result.balance, address);
+            } catch (e) {
+                showBalance(0, address);
+            }
         }
+
         if (window.chatooNotif) window.chatooNotif.toast('✅ تم الاتصال بالمحفظة');
     } catch (err) {
-        document.getElementById("w-message").innerHTML = `❌ ${err.message || 'فشل الاتصال'}`;
+        document.getElementById("w-message").innerHTML =
+            `❌ ${err.message || 'فشل الاتصال'}`;
     }
 }
 
 function showBalanceCard(username) {
-    document.getElementById("w-balance-card").style.display = "block";
-    document.getElementById("w-message").style.display = "none";
-    document.getElementById("w-btn-connect").style.display = "none";
-    document.getElementById("w-btn-refresh").style.display = "block";
+    const balCard = document.getElementById("w-balance-card");
+    const msg = document.getElementById("w-message");
+    const btnConnect = document.getElementById("w-btn-connect");
+    const btnRefresh = document.getElementById("w-btn-refresh");
+    if (balCard) balCard.style.display = "block";
+    if (msg) msg.style.display = "none";
+    if (btnConnect) btnConnect.style.display = "none";
+    if (btnRefresh) btnRefresh.style.display = "block";
 }
 
 function showBalance(balance, address) {
     const el = document.getElementById("w-balance-val");
-    el.textContent = balance.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 7 });
-    if (address) {
-        document.getElementById("w-address").textContent = "📍 " + address.slice(0,8) + "..." + address.slice(-8);
-        document.getElementById("w-address").style.display = "block";
+    if (el) el.textContent = Number(balance).toLocaleString("en", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 7
+    });
+    const addrEl = document.getElementById("w-address");
+    if (addrEl && address) {
+        addrEl.textContent = "📍 " + address.slice(0, 8) + "..." + address.slice(-8);
+        addrEl.style.display = "block";
     }
 }
 
 async function refreshWallet() {
     const address = sessionStorage.getItem("pi_address");
     if (address && window.chatooBlock) {
-        const result = await window.chatooBlock.getAccountBalance(address);
-        showBalance(result.balance, address);
-        if (window.chatooNotif) window.chatooNotif.toast('🔄 تم تحديث الرصيد');
+        try {
+            const result = await window.chatooBlock.getAccountBalance(address);
+            showBalance(result.balance, address);
+            if (window.chatooNotif) window.chatooNotif.toast('🔄 تم تحديث الرصيد');
+        } catch (e) {
+            if (window.chatooNotif) window.chatooNotif.toast('❌ فشل التحديث');
+        }
     }
 }
 
 function openSettingsModal() {
     Swal.fire({
         title: "⚙️ إعدادات Chatoo",
-        html: `<div style="text-align:right;color:#fff;">
-            <label style="font-size:13px;color:#8257e5;">وضع العرض</label>
-            <select id="cinematic-mode" class="swal2-input" style="background:#18181c;color:#fff;border-color:#333;">
-                <option value="dark" ${(localStorage.getItem("chatoo_mode")||"dark")==="dark"?"selected":""}>🌑 داكن</option>
-                <option value="vibrant" ${localStorage.getItem("chatoo_mode")==="vibrant"?"selected":""}>✨ حيوي</option>
-            </select></div>`,
-        background: "#121214", color: "#fff", confirmButtonColor: "#ffd700",
-        confirmButtonText: "حفظ", showCancelButton: true, cancelButtonText: "إلغاء"
+        html: `
+            <div style="text-align:right;color:#fff;">
+                <label style="font-size:13px;color:#8257e5;">وضع العرض</label>
+                <select id="cinematic-mode" class="swal2-input"
+                    style="background:#18181c;color:#fff;border-color:#333;">
+                    <option value="dark"
+                        ${(localStorage.getItem("chatoo_mode")||"dark")==="dark"?"selected":""}>
+                        🌑 داكن
+                    </option>
+                    <option value="vibrant"
+                        ${localStorage.getItem("chatoo_mode")==="vibrant"?"selected":""}>
+                        ✨ حيوي
+                    </option>
+                </select>
+            </div>`,
+        background: "#121214",
+        color: "#fff",
+        confirmButtonColor: "#ffd700",
+        confirmButtonText: "حفظ",
+        showCancelButton: true,
+        cancelButtonText: "إلغاء"
     }).then(r => {
         if (r.isConfirmed) {
-            localStorage.setItem("chatoo_mode", document.getElementById("cinematic-mode").value);
+            localStorage.setItem(
+                "chatoo_mode",
+                document.getElementById("cinematic-mode").value
+            );
             if (window.chatooNotif) window.chatooNotif.toast('⚙️ تم حفظ الإعدادات');
         }
     });
 }
 
+// ═══════════════════ تهيئة ═══════════════════
 document.addEventListener('DOMContentLoaded', () => {
     window.chatooActions = new ChatooActions();
+    console.log('🎬 Chatoo Actions Ready');
 });
