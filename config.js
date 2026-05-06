@@ -12,10 +12,14 @@ const CHATOO_CONFIG = {
     piNetwork: {
         sandbox: true,
         version: "2.0",
-        rpcEndpoint: "https://rpc.testnet.minepi.com",
-        horizonEndpoint: "https://api.testnet.minepi.com",
-        mainnetRpc: "https://rpc.mainnet.minepi.com",
-        mainnetHorizon: "https://api.mainnet.minepi.com"
+
+        // ✅ إصلاح - Horizon API الصحيح مع /v2
+        rpcEndpoint:      "https://api.testnet.minepi.com/v2",
+        horizonEndpoint:  "https://api.testnet.minepi.com/v2",
+
+        // Mainnet (للمستقبل)
+        mainnetRpc:       "https://api.mainnet.minepi.com/v2",
+        mainnetHorizon:   "https://api.mainnet.minepi.com/v2"
     },
 
     firebase: {
