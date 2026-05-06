@@ -1125,10 +1125,10 @@
             }
         },
 
-        // ✅ دالة الدفع الموحدة
+        // ✅ دالة الدفع الموحدة – تفتح نافذة الدفع
         piPay(amt, label) {
             if (window.chatooBlock) {
-                window.chatooBlock.doPayment(amt, label);
+                window.chatooBlock.renderTransferModal();
             } else {
                 Swal.fire({
                     title: '⚠️ نظام الدفع غير جاهز',
@@ -1308,28 +1308,12 @@
             if (!confirm.isConfirmed) return;
 
             try {
-                await Pi.createPayment({
-                    amount: pricePi,
-                    memo: `Chatoo Shop - ${itemName}`,
-                    metadata: { itemId, userId: this.state.id }
-                }, {
-                    onReadyForServerCompletion: async (paymentId, txid) => {
-                        this.purchasedItems.push({
-                            id: itemId, name: itemName, price: pricePi,
-                            type: itemType, txid, date: new Date().toISOString(), active: true
-                        });
-                        localStorage.setItem('chatoo_inventory', JSON.stringify(this.purchasedItems));
-                        this.applyItemEffect(itemId, itemType);
-                        this.renderPurchaseHistory();
-                        this.renderInventory();
-                        
-                        if (window.chatooAchievements) {
-                            window.chatooAchievements.trackShopPurchase();
-                        }
-                        
-                        Swal.fire({ title: '🎉 تم الشراء!', text: itemName, icon: 'success' });
-                    }
-                });
+                // استخدم نفس آلية الدفع
+                if (window.chatooBlock) {
+                    // عنوان المستلم للمتجر (يمكنك تغييره إلى عنوان محفظتك)
+                    const shopWallet = 'G-SHOP-WALLET-ADDRESS';
+                    window.chatooBlock.doPayment(shopWallet, pricePi, `Chatoo Shop - ${itemName}`);
+                }
             } catch (e) {
                 console.error("Purchase error:", e);
             }
@@ -1470,4 +1454,4 @@
     </script>
 
 </body>
-</html>
+    </html>
