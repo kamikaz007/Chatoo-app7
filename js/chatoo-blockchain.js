@@ -137,7 +137,8 @@ class ChatooBlockchain {
             onReadyForServerApproval: async (paymentId) => {
                 console.log('⏳ Approving paymentId:', paymentId);
                 try {
-                    const res = await fetch('/.netlify/functions/approve', {
+                    // في onReadyForServerApproval:
+const res = await fetch('/.netlify/functions/payment-approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
@@ -153,7 +154,10 @@ class ChatooBlockchain {
             onReadyForServerCompletion: async (paymentId, txid) => {
                 console.log('⏳ Completing txid:', txid);
                 try {
-                    const res = await fetch('/.netlify/functions/complete', {
+                
+
+// في onReadyForServerCompletion:
+const res = await fetch('/.netlify/functions/payment-complete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId, txid })
