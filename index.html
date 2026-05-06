@@ -626,7 +626,13 @@
     <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
     
     <!-- ✅ أضف هذا مباشرة -->
-    <div class="nav-btn" id="btn-pi-pay" onclick="window.chatooBlock?.renderTransferModal()">💸</div>
+    <div class="nav-btn" id="btn-pi-pay" onclick="
+    if(window.chatooBlock) { 
+        window.chatooBlock.renderTransferModal(); 
+    } else { 
+        alert('جاري التحميل... حاول مرة أخرى'); 
+    }
+">💸</div>
     <div class="nav-btn" id="btn-wallet-custom" onclick="openWallet()">💳</div>
     <div class="nav-btn" id="btn-settings-custom" onclick="openSettingsModal()">⚙️</div>
         </nav>
