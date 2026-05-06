@@ -1,8 +1,6 @@
-// netlify/functions/payment-approve.js
-// المسؤول: Kamikaz007
-
 exports.handler = async (event) => {
     const { paymentId } = JSON.parse(event.body);
+    console.log('📥 paymentId received:', paymentId);
 
     try {
         const res = await fetch(
@@ -17,30 +15,18 @@ exports.handler = async (event) => {
         );
 
         const data = await res.json();
+        
+        // ✅ Log كامل
+        console.log('📤 Pi API status:', res.status);
+        console.log('📤 Pi API response:', JSON.stringify(data));
 
-        // ✅ تحقق من نجاح الـ API
-        if (!res.ok) {
-            console.error('❌ Approve failed:', data);
-            return {
-                statusCode: res.status,
-                body: JSON.stringify({ error: data })
-            };
-        }
-
-        console.log('✅ Payment approved:', paymentId);
-
-        // ✅ إرجاع paymentId صراحةً - ضروري لكي Pi Browser يكمل للمرحلة التالية
         return {
             statusCode: 200,
-            body: JSON.stringify({
-                paymentId,
-                approved: true,
-                ...data
-            })
+            body: JSON.stringify({ paymentId, approved: true, ...data })
         };
 
     } catch(e) {
-        console.error('❌ Approve error:', e.message);
+        console.error('❌ Error:', e.message);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: e.message })
