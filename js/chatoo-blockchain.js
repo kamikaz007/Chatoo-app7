@@ -1,4 +1,4 @@
-// chatoo-blockchain.js - FINAL FIXED VERSION
+// chatoo-blockchain.js – FINAL PAYMENT FIX
 class ChatooBlockchain {
     constructor() {
         this.sdkReady = false;
@@ -15,7 +15,7 @@ class ChatooBlockchain {
 
     renderTransferModal() {
         this.initSDK();
-        
+
         Swal.fire({
             title: '💎 تحويل Pi (Testnet)',
             html: `
@@ -54,7 +54,7 @@ class ChatooBlockchain {
             return;
         }
 
-        // ✅ مصادقة واحدة فقط
+        // 1. مصادقة واحدة فقط وطلب الصلاحيات
         const auth = await Pi.authenticate(['payments', 'username'], (payment) => {
             console.log('Incomplete payment found:', payment);
         });
@@ -65,22 +65,21 @@ class ChatooBlockchain {
         }
 
         const userId = auth.user.username;
-        console.log('✅ Auth OK:', userId);
+        // حفظ الجلسة لتجنب مصادقة أخرى
+        sessionStorage.setItem("pi_user", userId);
+        sessionStorage.setItem("pi_token", auth.accessToken);
+        if (auth.user.wallet_address) sessionStorage.setItem("pi_address", auth.user.wallet_address);
 
-        // ✅ إنشاء الدفعة
-        const payment = Pi.createPayment({
+        // 2. إنشاء الدفعة مع callback صحيح
+        Pi.createPayment({
             amount: amount,
             memo: memo,
-            metadata: {
-                app: "Chatoo",
-                userId: userId,
-                recipient: recipient,
-                timestamp: Date.now()
-            }
+            metadata: { app: "Chatoo", userId, recipient, timestamp: Date.now() }
         }, {
-            // ✅ هذا هو المفتاح
+            // ✅ المفتاح: الموافقة الفورية
             onReadyForServerApproval: (paymentId) => {
                 console.log('✅ Approved:', paymentId);
+                // لا حاجة لإرجاع شيء، Pi SDK يتابع
             },
             onReadyForServerCompletion: (paymentId, txid) => {
                 console.log('✅ TX:', txid);
@@ -98,18 +97,21 @@ class ChatooBlockchain {
                     icon: 'success',
                     background: "#121214", color: "#fff"
                 });
+
+                // إضافة رسالة في المحادثة إذا كان المستخدم في غرفة
+                if (window.db && window.chatoo?.state?.room) {
+                    window.db.collection("rooms_v2").doc(window.chatoo.state.room)
+                        .collection("m").add({
+                            u: userId,
+                            val: `💸 تم تحويل ${amount} Pi إلى ${recipient.slice(0,8)}... - ${memo}`,
+                            type: 'gift', txid: txid,
+                            t: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(() => {});
+                }
             },
             onCancel: () => Swal.fire({ title: 'تم الإلغاء', icon: 'info' }),
             onError: (error) => Swal.fire({ title: 'خطأ', text: error.message, icon: 'error' })
         });
-
-        // ✅ انتظر الدفعة
-        try {
-            await payment;
-        } catch (err) {
-            console.error('Payment failed:', err);
-            Swal.fire({ title: 'خطأ', text: err.message, icon: 'error' });
-        }
     }
 }
 
