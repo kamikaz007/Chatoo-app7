@@ -621,9 +621,14 @@
         <div class="radar-scroller" id="radar-list"></div>
 
         <nav>
-            <div class="nav-btn active" onclick="chatoo.route('map')">📍</div>
-            <div class="nav-btn" onclick="chatoo.route('shop')">🎁</div>
-            <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
+    <div class="nav-btn active" onclick="chatoo.route('map')">📍</div>
+    <div class="nav-btn" onclick="chatoo.route('shop')">🎁</div>
+    <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
+    
+    <!-- ✅ أضف هذا مباشرة -->
+    <div class="nav-btn" id="btn-pi-pay" onclick="window.chatooBlock?.renderTransferModal()">💸</div>
+    <div class="nav-btn" id="btn-wallet-custom" onclick="openWallet()">💳</div>
+    <div class="nav-btn" id="btn-settings-custom" onclick="openSettingsModal()">⚙️</div>
         </nav>
 
     </div>
