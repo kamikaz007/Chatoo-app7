@@ -1,37 +1,26 @@
-// payment-approve.js - Netlify Function
 exports.handler = async (event) => {
-    // CORS headers
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    };
-
-    // Handle preflight
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
+    const { paymentId } = JSON.parse(event.body);
+    
     try {
-        // قبول الطلب مباشرة
-        const body = JSON.parse(event.body || '{}');
-        
-        console.log('✅ Payment Approved:', body.paymentId);
-
+        const res = await fetch(
+            `https://api.testnet.minepi.com/v2/payments/${paymentId}/approve`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Key ${process.env.PI_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        const data = await res.json();
         return {
             statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                success: true,
-                paymentId: body.paymentId,
-                approvedAt: new Date().toISOString()
-            })
+            body: JSON.stringify(data)
         };
-    } catch (error) {
+    } catch(e) {
         return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ success: true })
+            statusCode: 500,
+            body: JSON.stringify({ error: e.message })
         };
     }
 };
