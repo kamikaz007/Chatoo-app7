@@ -14,14 +14,12 @@ exports.handler = async (event) => {
             }
         );
         const data = await res.json();
-        return {
-            statusCode: 200,
-            body: JSON.stringify(data)
-        };
+        
+        if (!res.ok) {
+            return { statusCode: res.status, body: JSON.stringify({ error: data }) };
+        }
+        return { statusCode: 200, body: JSON.stringify(data) };
     } catch(e) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: e.message })
-        };
+        return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
     }
 };
