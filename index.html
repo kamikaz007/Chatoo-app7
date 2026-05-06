@@ -597,7 +597,14 @@
     <div class="app-shell">
 
         <header>
-            <div class="header-profile-section" onclick="chatoo.route('profile')">
+            <!-- زر تسجيل الدخول (يظهر عندما لا يكون المستخدم موثّقاً) -->
+            <div id="btn-pi-signin" class="header-profile-section" onclick="window.chatooAuth?.authenticate()" style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:20px;">🔐</span>
+                <span style="font-size:12px; font-weight:bold;">تسجيل الدخول</span>
+            </div>
+
+            <!-- الملف الشخصي (يظهر بعد المصادقة) -->
+            <div class="header-profile-section" onclick="chatoo.route('profile')" id="header-profile-section" style="display:none;">
                 <img id="header-avatar-img" class="header-avatar" src="https://via.placeholder.com/150" alt="Profile">
                 <span id="rank-label">ORIGIN VOYAGER</span>
             </div>
@@ -621,20 +628,12 @@
         <div class="radar-scroller" id="radar-list"></div>
 
         <nav>
-    <div class="nav-btn active" onclick="chatoo.route('map')">📍</div>
-    <div class="nav-btn" onclick="chatoo.route('shop')">🎁</div>
-    <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
-    
-    <!-- ✅ أضف هذا مباشرة -->
-    <div class="nav-btn" id="btn-pi-pay" onclick="
-    if(window.chatooBlock) { 
-        window.chatooBlock.renderTransferModal(); 
-    } else { 
-        alert('جاري التحميل... حاول مرة أخرى'); 
-    }
-">💸</div>
-    <div class="nav-btn" id="btn-wallet-custom" onclick="openWallet()">💳</div>
-    <div class="nav-btn" id="btn-settings-custom" onclick="openSettingsModal()">⚙️</div>
+            <div class="nav-btn active" onclick="chatoo.route('map')">📍</div>
+            <div class="nav-btn" onclick="chatoo.route('shop')">🎁</div>
+            <div class="nav-btn" onclick="chatoo.route('profile')">👤</div>
+            <div class="nav-btn" id="btn-pi-pay" onclick="if(window.chatooBlock) { window.chatooBlock.renderTransferModal(); } else { alert('جاري التحميل... حاول مرة أخرى'); }">💸</div>
+            <div class="nav-btn" id="btn-wallet-custom" onclick="openWallet()">💳</div>
+            <div class="nav-btn" id="btn-settings-custom" onclick="openSettingsModal()">⚙️</div>
         </nav>
 
     </div>
@@ -1136,7 +1135,6 @@
             }
         },
 
-        // ✅ دالة الدفع الموحدة – تفتح نافذة الدفع
         piPay(amt, label) {
             if (window.chatooBlock) {
                 window.chatooBlock.renderTransferModal();
@@ -1319,9 +1317,7 @@
             if (!confirm.isConfirmed) return;
 
             try {
-                // استخدم نفس آلية الدفع
                 if (window.chatooBlock) {
-                    // عنوان المستلم للمتجر (يمكنك تغييره إلى عنوان محفظتك)
                     const shopWallet = 'G-SHOP-WALLET-ADDRESS';
                     window.chatooBlock.doPayment(shopWallet, pricePi, `Chatoo Shop - ${itemName}`);
                 }
@@ -1454,6 +1450,46 @@
         }
     };
 
+    function openWallet() {
+        if (window.chatooAuth?.isPiAuthenticated()) {
+            Swal.fire({
+                title: '💳 محفظة Pi',
+                html: `<p>اسم المستخدم: <strong>${window.chatooAuth.getRealUsername()}</strong></p>
+                       <p>الرصيد يُعرض داخل متصفح Pi</p>`,
+                icon: 'info',
+                background: "#121214",
+                color: "#fff"
+            });
+        } else {
+            Swal.fire({
+                title: '🔐 سجّل الدخول أولاً',
+                text: 'اضغط على زر تسجيل الدخول في الأعلى',
+                icon: 'warning',
+                background: "#121214",
+                color: "#fff"
+            });
+        }
+    }
+
+    function openSettingsModal() {
+        Swal.fire({
+            title: '⚙️ الإعدادات',
+            html: `
+                <div style="text-align:right;">
+                    <p>الإصدار: ${CHATOO_CONFIG.app.version}</p>
+                    <p>الشبكة: ${CHATOO_CONFIG.app.network}</p>
+                    <button onclick="window.chatooAuth?.logout()" 
+                        style="background:#ff4757;border:none;color:#fff;padding:10px 20px;border-radius:10px;cursor:pointer;">
+                        ⏻ تسجيل الخروج
+                    </button>
+                </div>
+            `,
+            background: "#121214",
+            color: "#fff",
+            showConfirmButton: false
+        });
+    }
+
     window.addEventListener('load', () => {
         chatoo.init();
         console.log('🚀 Chatoo Ultra Pro - Ready');
@@ -1465,4 +1501,4 @@
     </script>
 
 </body>
-    </html>
+</html>
