@@ -91,6 +91,8 @@ class ChatooBlockchain {
                 ['payments', 'username'],
                 (payment) => {
                     console.log('Incomplete payment found:', payment);
+                    // ✅ إصلاح #2 - استدعاء endpoint الصحيح
+                    this.onIncompletePaymentFound(payment);
                 }
             );
         } catch (e) {
@@ -137,8 +139,7 @@ class ChatooBlockchain {
             onReadyForServerApproval: async (paymentId) => {
                 console.log('⏳ Approving paymentId:', paymentId);
                 try {
-                    // في onReadyForServerApproval:
-const res = await fetch('/.netlify/functions/payment-approve', {
+                    const res = await fetch('/.netlify/functions/payment-approve', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId })
@@ -154,18 +155,37 @@ const res = await fetch('/.netlify/functions/payment-approve', {
             onReadyForServerCompletion: async (paymentId, txid) => {
                 console.log('⏳ Completing txid:', txid);
                 try {
-                
-
-// في onReadyForServerCompletion:
-const res = await fetch('/.netlify/functions/payment-complete', {
+                    // ✅ إصلاح #1 - body يتضمن txid
+                    const res = await fetch('/.netlify/functions/payment-complete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ paymentId, txid })
                     });
                     const data = await res.json();
+
+                    if (!res.ok) {
+                        console.error('❌ Complete failed:', data);
+                        Swal.fire({
+                            title: 'خطأ في إتمام الدفع',
+                            text: JSON.stringify(data.error || data),
+                            icon: 'error',
+                            background: "#121214",
+                            color: "#fff"
+                        });
+                        return;
+                    }
+
                     console.log('✅ Completed:', data);
                 } catch (e) {
                     console.error('❌ Complete error:', e);
+                    Swal.fire({
+                        title: 'خطأ في الاتصال',
+                        text: e.message,
+                        icon: 'error',
+                        background: "#121214",
+                        color: "#fff"
+                    });
+                    return;
                 }
 
                 // حفظ المعاملة
@@ -267,11 +287,11 @@ const res = await fetch('/.netlify/functions/payment-complete', {
         }
     }
 
-    // معالجة الدفعات غير المكتملة
+    // ✅ إصلاح #2 - معالجة الدفعات غير المكتملة بـ endpoint الصحيح
     onIncompletePaymentFound(payment) {
         console.warn('⚠️ Incomplete payment:', payment);
         if (payment?.identifier) {
-            fetch('/.netlify/functions/complete', {
+            fetch('/.netlify/functions/payment-complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
