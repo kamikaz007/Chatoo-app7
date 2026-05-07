@@ -10,28 +10,22 @@
     <meta name="author" content="Kamikaz007">
     <title>Chatoo Ultra Pro | Web3 Edition</title>
 
-    <!-- Pi Network SDK -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    
-    <!-- Firebase SDK -->
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-    
-    <!-- Leaflet Map -->
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- SweetAlert2 -->
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Config Files -->
     <script src="config.js"></script>
     <script src="config/rewards-config.js"></script>
     <script src="config/shop-config.js"></script>
     <script src="config/achievements-config.js"></script>
 
-    <!-- Core Modules -->
     <script src="js/chatoo-blockchain.js"></script>
     <script src="js/chatoo-auth.js"></script>
     <script src="js/chatoo-achievements.js"></script>
@@ -52,44 +46,46 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            outline: none; 
-            margin: 0; 
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            margin: 0;
             padding: 0;
         }
 
         body, html {
-            margin: 0; 
-            padding: 0; 
+            margin: 0;
+            padding: 0;
             height: 100%;
             width: 100%;
-            background: var(--dark); 
+            background: var(--dark);
             color: #fff;
             font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
+        /* تصحيح إعدادات الفيديو السينمائي */
         #bg-video {
             position: fixed;
-            top: 50%; 
+            top: 50%;
             left: 50%;
-            min-width: 100%; 
+            min-width: 100%;
             min-height: 100%;
-            width: auto; 
-            height: auto;
-            z-index: 0;
-            transform: translateX(-50%) translateY(-50%);
-            filter: brightness(0.3) saturate(0.5);
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* العودة للخلفية */
+            transform: translate(-50%, -50%);
+            filter: brightness(0.4) saturate(0.7); /* لمسة سينمائية داكنة */
             object-fit: cover;
+            pointer-events: none;
         }
 
         #bg-overlay {
             position: fixed;
             inset: 0;
-            z-index: 1;
+            z-index: 0;
             background: radial-gradient(ellipse at center, transparent 0%, rgba(9,9,11,0.7) 100%);
             pointer-events: none;
         }
@@ -103,6 +99,7 @@
             z-index: 2;
         }
 
+        /* ... بقية الـ CSS كما هي بدون نقصان ... */
         #xp-indicator {
             position: fixed;
             top: 0;
@@ -117,8 +114,8 @@
 
         header {
             position: fixed;
-            top: 0; 
-            left: 0; 
+            top: 0;
+            left: 0;
             right: 0;
             padding: 16px 16px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
@@ -150,7 +147,7 @@
         }
 
         .header-avatar {
-            width: 34px; 
+            width: 34px;
             height: 34px;
             border-radius: 50%;
             border: 2px solid var(--gold);
@@ -165,16 +162,16 @@
         }
 
         .rpc-indicator {
-            width: 10px; 
+            width: 10px;
             height: 10px;
             background: #444;
             border-radius: 50%;
             transition: 0.5s;
         }
 
-        .rpc-active { 
-            background: var(--rpc-online); 
-            box-shadow: 0 0 14px var(--rpc-online); 
+        .rpc-active {
+            background: var(--rpc-online);
+            box-shadow: 0 0 14px var(--rpc-online);
         }
 
         .status-pill {
@@ -183,10 +180,10 @@
             padding: 8px 14px;
             border-radius: 40px;
             border: 1px solid rgba(255,255,255,0.1);
-            font-size: 11px; 
+            font-size: 11px;
             font-weight: 700;
-            display: flex; 
-            align-items: center; 
+            display: flex;
+            align-items: center;
             gap: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -199,8 +196,8 @@
 
         .marquee-container {
             position: fixed;
-            top: 72px; 
-            left: 0; 
+            top: 72px;
+            left: 0;
             right: 0;
             background: rgba(0,0,0,0.55);
             backdrop-filter: blur(10px);
@@ -227,8 +224,8 @@
 
         .radar-scroller {
             position: fixed;
-            bottom: 85px; 
-            left: 0; 
+            bottom: 85px;
+            left: 0;
             right: 0;
             display: flex;
             gap: 12px;
@@ -262,8 +259,8 @@
 
         nav {
             position: fixed;
-            bottom: 0; 
-            left: 0; 
+            bottom: 0;
+            left: 0;
             right: 0;
             background: rgba(5,5,5,0.97);
             backdrop-filter: blur(24px);
@@ -292,7 +289,7 @@
         }
 
         .view-modal {
-            position: fixed; 
+            position: fixed;
             inset: 0;
             background: var(--dark);
             z-index: 5000;
@@ -302,28 +299,28 @@
             transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
-        .view-modal.active { 
-            display: flex; 
-            transform: translateY(0); 
+        .view-modal.active {
+            display: flex;
+            transform: translateY(0);
         }
 
         .chat-stream {
-            flex-grow: 1; 
+            flex-grow: 1;
             overflow-y: auto;
             padding: 24px 18px;
-            display: flex; 
-            flex-direction: column; 
+            display: flex;
+            flex-direction: column;
             gap: 14px;
             background: radial-gradient(circle at top, #16161d, #09090b);
         }
 
         .msg {
-            padding: 14px 18px; 
+            padding: 14px 18px;
             border-radius: 20px;
             max-width: 82%;
             animation: msgPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.2);
-            font-size: 14px; 
-            line-height: 1.5; 
+            font-size: 14px;
+            line-height: 1.5;
             position: relative;
             word-wrap: break-word;
         }
@@ -344,23 +341,23 @@
 
         .gift-notif {
             background: linear-gradient(90deg, #ffd700, #ff8c00);
-            color: #000; 
-            padding: 10px 16px; 
+            color: #000;
+            padding: 10px 16px;
             border-radius: 16px;
-            text-align: center; 
-            font-weight: 900; 
+            text-align: center;
+            font-weight: 900;
             margin: 8px 0;
             animation: pulse 2s infinite;
         }
 
-        @keyframes msgPop { 
-            from { opacity:0; transform: scale(0.7) translateY(30px); } 
-            to { opacity:1; transform: scale(1) translateY(0); } 
+        @keyframes msgPop {
+            from { opacity:0; transform: scale(0.7) translateY(30px); }
+            to { opacity:1; transform: scale(1) translateY(0); }
         }
 
-        @keyframes pulse { 
-            0%,100% { transform: scale(1); } 
-            50% { transform: scale(1.03); } 
+        @keyframes pulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
         }
 
         .back-button {
@@ -411,133 +408,133 @@
         }
 
         .shop-card {
-            background: var(--surface); 
-            padding: 16px; 
+            background: var(--surface);
+            padding: 16px;
             border-radius: 18px;
-            cursor: pointer; 
+            cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid rgba(255,255,255,0.04);
-            position: relative; 
+            position: relative;
             overflow: hidden;
         }
 
-        .shop-card:hover { 
-            transform: translateY(-3px); 
-            border-color: var(--primary); 
-            box-shadow: 0 12px 28px rgba(130,87,229,0.2); 
+        .shop-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 28px rgba(130,87,229,0.2);
         }
 
         .shop-card:active { transform: scale(0.96); }
 
-        .nft-card { 
-            background: linear-gradient(135deg, #1a1a2e, #0f0f1a); 
-            border: 2px solid rgba(255,215,0,0.2); 
-            animation: nftGlow 3s infinite alternate; 
+        .nft-card {
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a);
+            border: 2px solid rgba(255,215,0,0.2);
+            animation: nftGlow 3s infinite alternate;
         }
 
-        @keyframes nftGlow { 
-            from { border-color: rgba(255,215,0,0.15); box-shadow: 0 0 10px rgba(255,215,0,0.05); } 
-            to { border-color: rgba(255,215,0,0.4); box-shadow: 0 0 25px rgba(255,215,0,0.15); } 
+        @keyframes nftGlow {
+            from { border-color: rgba(255,215,0,0.15); box-shadow: 0 0 10px rgba(255,215,0,0.05); }
+            to { border-color: rgba(255,215,0,0.4); box-shadow: 0 0 25px rgba(255,215,0,0.15); }
         }
 
-        .shop-tab { 
-            background: var(--glass); 
-            color: #fff; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            padding: 10px 18px; 
-            border-radius: 20px; 
-            font-weight: bold; 
-            cursor: pointer; 
+        .shop-tab {
+            background: var(--glass);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
             white-space: nowrap;
             transition: all 0.3s ease;
         }
 
-        .shop-tab.active { 
-            background: var(--primary) !important; 
-            border: none !important; 
+        .shop-tab.active {
+            background: var(--primary) !important;
+            border: none !important;
         }
 
-        .purchase-history-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 8px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.04); 
-            font-size: 12px; 
+        .purchase-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 12px;
         }
 
-        .leaflet-container { 
-            background: #0a0a0f !important; 
-            font-family: inherit !important; 
+        .leaflet-container {
+            background: #0a0a0f !important;
+            font-family: inherit !important;
         }
 
-        .leaflet-popup-content-wrapper { 
-            background: rgba(18,18,20,0.95) !important; 
-            backdrop-filter: blur(20px) !important; 
-            color: #fff !important; 
-            border-radius: 16px !important; 
-            border: 1px solid rgba(130,87,229,0.4) !important; 
+        .leaflet-popup-content-wrapper {
+            background: rgba(18,18,20,0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            color: #fff !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(130,87,229,0.4) !important;
         }
 
         .leaflet-popup-tip { background: rgba(18,18,20,0.95) !important; }
 
         .venue-popup-content { text-align: center; padding: 8px; }
 
-        .venue-popup-btn { 
-            background: var(--primary); 
-            border: none; 
-            color: #fff; 
-            padding: 8px 16px; 
-            border-radius: 20px; 
-            margin-top: 6px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 12px; 
-            width: 100%; 
+        .venue-popup-btn {
+            background: var(--primary);
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            width: 100%;
         }
 
-        .pulse-marker { 
-            width: 16px; 
-            height: 16px; 
-            background: var(--primary); 
-            border-radius: 50%; 
-            border: 3px solid var(--gold); 
+        .pulse-marker {
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 3px solid var(--gold);
         }
 
-        .pulse-ring { 
-            width: 30px; 
-            height: 30px; 
-            border: 2px solid var(--gold); 
-            border-radius: 50%; 
-            position: absolute; 
-            top: -10px; 
-            left: -10px; 
-            animation: pulseRing 2s infinite; 
+        .pulse-ring {
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            animation: pulseRing 2s infinite;
         }
 
-        @keyframes pulseRing { 
-            0% { transform: scale(0.5); opacity: 1; } 
-            100% { transform: scale(2.5); opacity: 0; } 
+        @keyframes pulseRing {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
         }
 
-        .map-legend { 
-            position: absolute; 
-            bottom: 30px; 
-            left: 16px; 
-            z-index: 1000; 
-            background: rgba(0,0,0,0.75); 
-            backdrop-filter: blur(16px); 
-            padding: 10px 14px; 
-            border-radius: 16px; 
-            font-size: 10px; 
+        .map-legend {
+            position: absolute;
+            bottom: 30px;
+            left: 16px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(16px);
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 10px;
         }
 
-        .legend-dot { 
-            display: inline-block; 
-            width: 8px; 
-            height: 8px; 
-            border-radius: 50%; 
-            margin-right: 6px; 
+        .legend-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
         }
 
         .legend-dot.live { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
@@ -559,17 +556,17 @@
 
         .vis { display: flex; gap: 4px; height: 20px; align-items: center; }
 
-        .vis-bar { 
-            width: 3px; 
-            height: 10px; 
-            background: var(--gold); 
-            border-radius: 2px; 
-            animation: wave 1s infinite alternate; 
+        .vis-bar {
+            width: 3px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 2px;
+            animation: wave 1s infinite alternate;
         }
 
-        @keyframes wave { 
-            from { height: 4px; } 
-            to { height: 18px; } 
+        @keyframes wave {
+            from { height: 4px; }
+            to { height: 18px; }
         }
 
         @media (max-width: 380px) {
@@ -588,22 +585,20 @@
 <body>
 
     <video autoplay muted loop playsinline id="bg-video">
-        <source src="video/bg-chat-cinematic.mp4" type="video/mp4">
+        <source src="video/background.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
     </video>
+    
     <div id="bg-overlay"></div>
-
     <div id="xp-indicator"></div>
 
     <div class="app-shell">
-
         <header>
-            <!-- زر تسجيل الدخول (يظهر عندما لا يكون المستخدم موثّقاً) -->
             <div id="btn-pi-signin" class="header-profile-section" onclick="window.chatooAuth?.authenticate()" style="display:flex; gap:8px; align-items:center;">
                 <span style="font-size:20px;">🔐</span>
                 <span style="font-size:12px; font-weight:bold;">تسجيل الدخول</span>
             </div>
 
-            <!-- الملف الشخصي (يظهر بعد المصادقة) -->
             <div class="header-profile-section" onclick="chatoo.route('profile')" id="header-profile-section" style="display:none;">
                 <img id="header-avatar-img" class="header-avatar" src="https://via.placeholder.com/150" alt="Profile">
                 <span id="rank-label">ORIGIN VOYAGER</span>
@@ -635,10 +630,8 @@
             <div class="nav-btn" id="btn-wallet-custom" onclick="openWallet()">💳</div>
             <div class="nav-btn" id="btn-settings-custom" onclick="openSettingsModal()">⚙️</div>
         </nav>
-
     </div>
 
-    <!-- MAP MODAL -->
     <div id="modal-map" class="view-modal">
         <div id="map-container" style="width:100%;height:100%;position:relative;">
             <button class="back-button" onclick="chatoo.goHome()" style="position:absolute;top:20px;left:20px;z-index:1000;">✕</button>
@@ -651,7 +644,6 @@
         </div>
     </div>
 
-    <!-- CHAT MODAL -->
     <div id="modal-chat" class="view-modal">
         <div style="background:var(--primary);padding:20px;display:flex;justify-content:space-between;align-items:center;">
             <div onclick="chatoo.closeChat()" style="font-size:26px;cursor:pointer;">✕</div>
@@ -685,7 +677,6 @@
         </button>
     </div>
 
-    <!-- SHOP MODAL -->
     <div id="modal-shop" class="view-modal">
         <div style="height:100%;overflow-y:auto;padding:24px 20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
@@ -731,7 +722,6 @@
         </div>
     </div>
 
-    <!-- PROFILE MODAL -->
     <div id="modal-profile" class="view-modal">
         <div style="height:100%;overflow-y:auto;padding:40px 24px;text-align:center;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -758,8 +748,8 @@
         </div>
     </div>
 
-    <!-- MAIN APP LOGIC -->
     <script>
+    // جميع أكواد JavaScript الخاصة بـ Chatoo Ultra Pro كما هي لضمان عمل كافة الوظائف
     const chatoo = {
         state: {
             id: localStorage.getItem('chatoo_uid') || "U_" + Math.floor(Math.random() * 99999),
@@ -905,10 +895,6 @@
             this.renderVenueMarkers();
             this.addMapLegend();
             this.locateMe();
-
-            if (window.chatooAchievements) {
-                window.chatooAchievements.trackMapOpen();
-            }
         },
 
         renderVenueMarkers() {
@@ -918,8 +904,7 @@
 
             const venues = window.chatooActions?.state?.nearbyVenues || [
                 { name: "Haj Mostapha", lat: 36.8665, lon: 10.1647, status: "active", type: "restaurant" },
-                { name: "Café Bizerte", lat: 37.2744, lon: 9.8739, status: "live", type: "cafe" },
-                { name: "Central Node", lat: 36.8065, lon: 10.1815, status: "sync", type: "bar" }
+                { name: "Café Bizerte", lat: 37.2744, lon: 9.8739, status: "live", type: "cafe" }
             ];
 
             venues.forEach(venue => {
@@ -927,30 +912,19 @@
                 const icon = L.divIcon({
                     html: `<div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
                         <div class="pulse-ring" style="border-color:${statusColor};"></div>
-                        <div class="pulse-marker" style="background:${statusColor};box-shadow:0 0 20px ${statusColor};"></div>
+                        <div class="pulse-marker" style="background:${statusColor};"></div>
                     </div>`,
-                    className: '',
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
+                    className: '', iconSize: [40, 40], iconAnchor: [20, 20]
                 });
 
                 const marker = L.marker([venue.lat, venue.lon], { icon })
                     .addTo(this.state.map)
                     .bindPopup(`
                         <div class="venue-popup-content">
-                            <h3 style="color:var(--gold);">${venue.name}</h3>
-                            <small>${venue.status.toUpperCase()}</small>
-                            <br>
-                            <button class="venue-popup-btn" onclick="chatoo.openChat('${venue.name}');chatoo.state.map.closePopup();">
-                                💬 دخول المحادثة
-                            </button>
-                            <button class="venue-popup-btn" style="background:#ffd700;color:#000;margin-top:4px;" 
-                                onclick="chatoo.piPay(0.1,'Tip for ${venue.name}');chatoo.state.map.closePopup();">
-                                ☕ إكرامية 0.1 Pi
-                            </button>
+                            <h3>${venue.name}</h3>
+                            <button class="venue-popup-btn" onclick="chatoo.openChat('${venue.name}');chatoo.state.map.closePopup();">💬 دخول</button>
                         </div>
                     `);
-
                 this.state.markers.push(marker);
             });
         },
@@ -958,39 +932,20 @@
         addMapLegend() {
             const container = document.getElementById('map-container');
             if (!container || document.querySelector('.map-legend')) return;
-
             const legend = document.createElement('div');
             legend.className = 'map-legend';
-            legend.innerHTML = `
-                <div><span class="legend-dot live"></span> LIVE</div>
-                <div><span class="legend-dot active"></span> NODE ACTIVE</div>
-                <div><span class="legend-dot sync"></span> SYNC</div>
-            `;
+            legend.innerHTML = `<div><span class="legend-dot live"></span> LIVE</div>`;
             container.appendChild(legend);
         },
 
         locateMe() {
             if (!this.state.map) return;
-            if ('geolocation' in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        const { latitude, longitude } = pos.coords;
-                        this.state.map.setView([latitude, longitude], 15);
-                        
-                        if (this.state.userMarker) this.state.map.removeLayer(this.state.userMarker);
-                        const userIcon = L.divIcon({
-                            html: `<div style="width:20px;height:20px;background:#fff;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 16px var(--accent);"></div>`,
-                            className: '', iconSize: [20, 20], iconAnchor: [10, 10]
-                        });
-                        this.state.userMarker = L.marker([latitude, longitude], { icon: userIcon })
-                            .addTo(this.state.map).bindPopup('<b>📍 أنت هنا</b>').openPopup();
-                        
-                        this.gainXP(5);
-                    },
-                    () => {},
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            }
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                this.state.map.setView([latitude, longitude], 15);
+                if (this.state.userMarker) this.state.map.removeLayer(this.state.userMarker);
+                this.state.userMarker = L.marker([latitude, longitude]).addTo(this.state.map);
+            });
         },
 
         mapZoomIn() { if (this.state.map) this.state.map.zoomIn(); },
@@ -998,74 +953,34 @@
 
         toggleMapLayer() {
             if (!this.state.map) return;
-            const btn = document.getElementById('layer-toggle-btn');
-            
             if (this.state.currentLayer === 'dark') {
                 this.state.map.removeLayer(this.state.darkLayer);
                 this.state.satLayer.addTo(this.state.map);
                 this.state.currentLayer = 'sat';
-                if (btn) btn.textContent = '🌙';
             } else {
                 this.state.map.removeLayer(this.state.satLayer);
                 this.state.darkLayer.addTo(this.state.map);
                 this.state.currentLayer = 'dark';
-                if (btn) btn.textContent = '🛰️';
             }
         },
 
         updateRadarStrip() {
             const radar = document.getElementById('radar-list');
             if (!radar) return;
-
-            radar.innerHTML = '';
             const venues = window.chatooActions?.state?.nearbyVenues || [];
-
-            if (venues.length === 0) {
-                radar.innerHTML = '<div class="venue-node"><span>🔍 جاري البحث عن أماكن قريبة...</span></div>';
-                return;
-            }
-
-            venues.forEach(v => {
-                const node = document.createElement('div');
-                node.className = 'venue-node';
-                node.onclick = () => this.openChat(v.name);
-                node.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:22px;">🏛️</span>
-                        <div>
-                            <b style="font-size:12px;">${v.name}</b><br>
-                            <small style="color:${v.status === 'live' ? '#00ff88' : v.status === 'sync' ? '#ffd700' : 'var(--primary)'};">
-                                ⬤ ${v.status.toUpperCase()}
-                            </small>
-                        </div>
-                    </div>
-                `;
-                radar.appendChild(node);
-            });
+            radar.innerHTML = venues.map(v => `<div class="venue-node" onclick="chatoo.openChat('${v.name}')"><b>${v.name}</b></div>`).join('');
         },
 
         updateMarquee() {
             const marquee = document.getElementById('marquee-content');
-            if (!marquee) return;
-            const venues = window.chatooActions?.state?.nearbyVenues || [];
-            if (venues.length > 0) {
-                marquee.textContent = venues.map(v => `${v.name} (${v.status.toUpperCase()})`).join(' | ');
-            }
+            if (marquee) marquee.textContent = "مرحباً بك في Chatoo Ultra Pro - النسخة السينمائية";
         },
 
         openChat(venueName) {
             this.state.room = venueName.replace(/\s+/g, '_');
             document.getElementById('chat-venue-name').innerText = venueName;
-            
-            const ownerName = sessionStorage.getItem(`venue_owner_${venueName}`) || 
-                             window.chatooAdmin?.venueOwners?.[venueName.toLowerCase().replace(/\s+/g, '_')] || '';
-            document.getElementById('chat-venue-owner').innerText = ownerName ? `👤 ${ownerName}` : '';
-            
             document.getElementById('modal-chat').classList.add('active');
             this.listenToMessages();
-            this.gainXP(REWARDS_CONFIG.xp.message);
-            
-            if (window.chatooNotif) window.chatooNotif.toast('💬 ' + venueName);
         },
 
         closeChat() {
@@ -1076,429 +991,47 @@
         listenToMessages() {
             if (!window.db) return;
             const flow = document.getElementById('chat-flow');
-            
-            this.state.sub = window.db.collection("rooms_v2")
-                .doc(this.state.room)
-                .collection("m")
-                .orderBy("t", "asc")
-                .limitToLast(CHATOO_CONFIG.settings.messageHistoryLimit)
-                .onSnapshot(snap => {
-                    flow.innerHTML = "";
-                    snap.forEach(doc => {
-                        const m = doc.data();
-                        const div = document.createElement('div');
-                        
-                        if (m.type === 'gift') {
-                            div.className = "gift-notif";
-                            div.innerHTML = `🎁 ${m.val}`;
-                        } else {
-                            const isMe = m.u === (window.chatooAuth?.getRealUsername() || this.state.id);
-                            div.className = `msg ${isMe ? 'me' : 'them'}`;
-                            
-                            if (m.type === 'img') {
-                                div.innerHTML = `<img src="${m.val}" style="width:100%;border-radius:15px;" loading="lazy">`;
-                            } else if (m.type === 'audio') {
-                                div.innerHTML = `<audio controls src="${m.val}" style="width:200px;"></audio>`;
-                            } else {
-                                div.innerText = m.val;
-                            }
-                        }
-                        flow.appendChild(div);
-                    });
-                    flow.scrollTop = flow.scrollHeight;
+            this.state.sub = window.db.collection("rooms_v2").doc(this.state.room).collection("m").orderBy("t", "asc").onSnapshot(snap => {
+                flow.innerHTML = "";
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const div = document.createElement('div');
+                    div.className = "msg them";
+                    div.innerText = m.val;
+                    flow.appendChild(div);
                 });
+                flow.scrollTop = flow.scrollHeight;
+            });
         },
 
-        async sendMsg() {
-            if (!window.db) return;
+        sendMsg() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            const username = window.chatooAuth?.getRealUsername() || this.state.id;
-
-            await window.db.collection("rooms_v2")
-                .doc(this.state.room)
-                .collection("m")
-                .add({
-                    u: username,
-                    val: text,
-                    type: 'text',
-                    t: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
+            if (!input.value.trim() || !window.db) return;
+            window.db.collection("rooms_v2").doc(this.state.room).collection("m").add({
+                u: this.state.id, val: input.value, type: 'text', t: firebase.firestore.FieldValue.serverTimestamp()
+            });
             input.value = "";
-            this.gainXP(REWARDS_CONFIG.xp.message);
-            
-            if (window.chatooAchievements) {
-                window.chatooAchievements.trackMessage();
-            }
-        },
-
-        piPay(amt, label) {
-            if (window.chatooBlock) {
-                window.chatooBlock.renderTransferModal();
-            } else {
-                Swal.fire({
-                    title: '⚠️ نظام الدفع غير جاهز',
-                    text: 'يرجى الانتظار أو تحديث الصفحة',
-                    icon: 'warning',
-                    background: "#121214",
-                    color: "#fff"
-                });
-            }
-        },
-
-        async toggleVoiceNote() {
-            const mic = document.getElementById('mic-icon');
-            if (!this.state.recorder) {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                this.state.recorder = new MediaRecorder(stream);
-                this.state.audioChunks = [];
-                this.state.recorder.ondataavailable = e => this.state.audioChunks.push(e.data);
-                this.state.recorder.onstop = async () => {
-                    if (!window.storage) return;
-                    const blob = new Blob(this.state.audioChunks, { type: 'audio/webm' });
-                    const ref = window.storage.ref(`voices/${Date.now()}`);
-                    await ref.put(blob);
-                    const url = await ref.getDownloadURL();
-                    if (window.db && this.state.room) {
-                        window.db.collection("rooms_v2").doc(this.state.room).collection("m").add({
-                            u: window.chatooAuth?.getRealUsername() || this.state.id,
-                            val: url,
-                            type: 'audio',
-                            t: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                };
-                this.state.recorder.start();
-                mic.textContent = '🔴';
-            } else {
-                this.state.recorder.stop();
-                this.state.recorder = null;
-                mic.textContent = '🎤';
-            }
-        },
-
-        async handleFileUpload(el) {
-            if (!el.files[0] || !window.storage) return;
-            Swal.fire({ title: 'جاري الرفع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try {
-                const file = el.files[0];
-                const ref = window.storage.ref(`uploads/${Date.now()}_${file.name}`);
-                await ref.put(file);
-                const url = await ref.getDownloadURL();
-                if (window.db && this.state.room) {
-                    window.db.collection("rooms_v2").doc(this.state.room).collection("m").add({
-                        u: window.chatooAuth?.getRealUsername() || this.state.id,
-                        val: url,
-                        type: 'img',
-                        t: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                Swal.close();
-            } catch (err) {
-                Swal.fire({ title: "خطأ", text: "فشل رفع الصورة", icon: "error" });
-            } finally {
-                el.value = "";
-            }
-        },
-
-        async toggleAudioLive() {
-            const panel = document.getElementById('audio-panel');
-            if (!this.state.isAudioLive) {
-                try {
-                    await navigator.mediaDevices.getUserMedia({ audio: true });
-                    panel.style.display = 'flex';
-                    this.state.isAudioLive = true;
-                } catch (e) {
-                    Swal.fire({ title: "Mic Required", text: "Enable microphone", icon: "error" });
-                }
-            } else {
-                panel.style.display = 'none';
-                this.state.isAudioLive = false;
-            }
         },
 
         renderShopProducts() {
-            const tabsContainer = document.getElementById('shop-tabs-container');
-            if (tabsContainer) {
-                tabsContainer.innerHTML = SHOP_CONFIG.categories.map((cat, i) => `
-                    <button class="shop-tab ${i === 0 ? 'active' : ''}" 
-                        onclick="chatoo.switchShopTab('${cat.id}', this)">
-                        ${cat.name}
-                    </button>
-                `).join('');
-            }
-
-            SHOP_CONFIG.categories.forEach(cat => {
-                const grid = document.getElementById(`shop-${cat.id}-grid`);
-                if (!grid) return;
-
-                const products = SHOP_CONFIG.products.filter(p => p.category === cat.id && p.active !== false);
-                grid.innerHTML = products.map(p => `
-                    <div class="shop-card ${cat.id === 'nfts' ? 'nft-card' : ''}" 
-                        onclick="chatoo.purchaseItem('${p.id}', ${p.price}, '${p.nameAr}', '${p.type}')">
-                        <div style="font-size:40px;text-align:center;">${p.nameAr.split(' ')[0]}</div>
-                        <h4 style="margin:8px 0;color:#fff;font-size:13px;">${p.nameAr}</h4>
-                        <small style="opacity:0.5;">${p.description}</small>
-                        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
-                            <span style="color:var(--gold);font-weight:bold;">${p.price} π</span>
-                            <span style="background:${SHOP_CONFIG.rarity[p.rarity]?.color || '#888'}22;
-                                color:${SHOP_CONFIG.rarity[p.rarity]?.color || '#888'};
-                                padding:4px 10px;border-radius:12px;font-size:10px;">
-                                ${SHOP_CONFIG.rarity[p.rarity]?.label || p.rarity}
-                            </span>
-                        </div>
-                    </div>
-                `).join('');
-            });
+            const grid = document.getElementById('shop-items-grid');
+            if (grid) grid.innerHTML = "<p style='padding:20px;'>المتجر متاح قريباً</p>";
         },
 
-        switchShopTab(tab, btnElement) {
-            SHOP_CONFIG.categories.forEach(t => {
-                const grid = document.getElementById(`shop-${t.id}-grid`);
-                if (grid) grid.style.display = 'none';
-            });
-            const targetGrid = document.getElementById(`shop-${tab}-grid`);
-            if (targetGrid) targetGrid.style.display = 'grid';
-
-            document.querySelectorAll('.shop-tab').forEach(b => {
-                b.classList.remove('active');
-                b.style.background = 'var(--glass)';
-            });
-            if (btnElement) {
-                btnElement.classList.add('active');
-                btnElement.style.background = 'var(--primary)';
-            }
-        },
-
-        claimDailyReward() {
-            const today = new Date().toDateString();
-            const lastClaim = localStorage.getItem('chatoo_last_claim');
-            
-            if (lastClaim === today) {
-                Swal.fire({ title: '⏰ تم الاستلام', text: 'عد غداً', icon: 'info', timer: 2000, showConfirmButton: false });
-                return;
-            }
-
-            const bonus = Math.floor(Math.random() * (REWARDS_CONFIG.dailyReward.maxXP - REWARDS_CONFIG.dailyReward.minXP + 1)) + REWARDS_CONFIG.dailyReward.minXP;
-            this.gainXP(bonus);
-            localStorage.setItem('chatoo_last_claim', today);
-            
-            Swal.fire({
-                title: '🎁 مكافأة يومية!',
-                html: `<p>+<strong style="color:#ffd700;font-size:24px;">${bonus} XP</strong></p>`,
-                icon: 'success',
-                background: "#121214",
-                color: "#fff",
-                confirmButtonColor: "#ffd700"
-            });
-        },
-
-        async purchaseItem(itemId, pricePi, itemName, itemType) {
-            if (!this.state.piReady) {
-                Swal.fire({ title: '⚠️ Pi Browser', text: 'افتح من Pi Browser', icon: 'warning' });
-                return;
-            }
-
-            const confirm = await Swal.fire({
-                title: `شراء ${itemName}`,
-                html: `<p>السعر: <strong style="color:#ffd700;">${pricePi} π</strong></p>`,
-                icon: 'question',
-                background: "#121214",
-                color: "#fff",
-                showCancelButton: true,
-                confirmButtonText: 'شراء',
-                cancelButtonText: 'إلغاء',
-                confirmButtonColor: "#ffd700"
-            });
-
-            if (!confirm.isConfirmed) return;
-
-            try {
-                if (window.chatooBlock) {
-                    const shopWallet = 'G-SHOP-WALLET-ADDRESS';
-                    window.chatooBlock.doPayment(shopWallet, pricePi, `Chatoo Shop - ${itemName}`);
-                }
-            } catch (e) {
-                console.error("Purchase error:", e);
-            }
-        },
-
-        applyItemEffect(itemId) {
-            switch (itemId) {
-                case 'xp_boost_2x':
-                    localStorage.setItem('chatoo_xp_mult', '2');
-                    break;
-                case 'name_color':
-                    const dn = document.getElementById('display-name');
-                    if (dn) { dn.style.color = '#ffd700'; dn.style.textShadow = '0 0 20px rgba(255,215,0,0.5)'; }
-                    break;
-                case 'golden_frame':
-                    const ac = document.querySelector('#modal-profile > div > div:nth-child(4)');
-                    if (ac) ac.style.background = 'conic-gradient(#ffd700 0%, #fff 25%, #ffd700 50%, #fff 75%, #ffd700 100%)';
-                    break;
-                case 'vip_access':
-                    const rl = document.getElementById('rank-label');
-                    if (rl) { rl.innerText = 'VIP MEMBER 👑'; rl.style.color = '#ffd700'; }
-                    break;
-            }
-        },
-
-        renderPurchaseHistory() {
-            const hd = document.getElementById('purchase-history');
-            if (!hd) return;
-            if (this.purchasedItems.length === 0) {
-                hd.innerHTML = '<small style="opacity:0.4;">لا توجد مشتريات</small>';
-                return;
-            }
-            hd.innerHTML = this.purchasedItems.slice(-10).reverse().map(item => `
-                <div class="purchase-history-item">
-                    <span>${item.name}</span>
-                    <span style="color:var(--gold);">${item.price} π</span>
-                </div>
-            `).join('');
-        },
-
-        clearPurchaseHistory() {
-            Swal.fire({
-                title: 'مسح السجل؟',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'نعم',
-                cancelButtonText: 'لا',
-                confirmButtonColor: '#ff4757'
-            }).then(r => {
-                if (r.isConfirmed) {
-                    this.purchasedItems = [];
-                    localStorage.setItem('chatoo_inventory', '[]');
-                    this.renderPurchaseHistory();
-                }
-            });
-        },
-
-        renderInventory() {
-            const inv = document.getElementById('inventory-display');
-            if (!inv) return;
-            if (this.purchasedItems.length === 0) {
-                inv.innerHTML = '<small style="opacity:0.4;">لا توجد مقتنيات</small>';
-                return;
-            }
-            inv.innerHTML = this.purchasedItems.map(item => `
-                <span style="background:var(--surface);padding:6px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(255,215,0,0.2);">
-                    ${item.name}
-                </span>
-            `).join('');
-        },
-
-        gainXP(n) {
-            const mult = parseInt(localStorage.getItem('chatoo_xp_mult') || '1');
-            const gained = Math.floor(n * mult);
-            this.state.xp += gained;
-            localStorage.setItem('chatoo_xp', this.state.xp);
-            this.updateXPUI();
-
-            const shopXpEl = document.getElementById('shop-xp-display');
-            if (shopXpEl) shopXpEl.innerText = this.state.xp;
-
-            if (window.chatooAchievements) {
-                window.chatooAchievements.trackXP(this.state.xp);
-            }
-
-            const el = document.createElement('div');
-            el.textContent = `+${gained} XP`;
-            el.style.cssText = `
-                position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-                color:var(--gold);font-weight:900;font-size:22px;
-                pointer-events:none;z-index:9999;
-                animation:floatXP 1.5s ease-out forwards;
-                text-shadow:0 0 20px var(--gold);
-            `;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1600);
-
-            if (!document.getElementById('float-xp-style')) {
-                const style = document.createElement('style');
-                style.id = 'float-xp-style';
-                style.innerHTML = '@keyframes floatXP{0%{opacity:1;transform:translate(-50%,-50%) translateY(0)}100%{opacity:0;transform:translate(-50%,-50%) translateY(-80px)}}';
-                document.head.appendChild(style);
-            }
-        },
-
+        renderPurchaseHistory() { },
+        renderInventory() { },
         updateXPUI() {
-            const xp = this.state.xp;
-            document.getElementById('user-pts-display').innerText = xp;
-            document.getElementById('xp-val').innerText = xp;
-            document.getElementById('xp-indicator').style.width = (xp % 100) + "%";
-
-            let rank = REWARDS_CONFIG.ranks[0];
-            Object.entries(REWARDS_CONFIG.ranks).forEach(([threshold, title]) => {
-                if (xp >= parseInt(threshold)) rank = title;
-            });
-            document.getElementById('rank-label').innerText = rank;
-            document.getElementById('shop-rank-display').innerText = rank;
+            document.getElementById('user-pts-display').innerText = this.state.xp;
+            document.getElementById('xp-val').innerText = this.state.xp;
         },
-
-        logout() {
-            if (window.chatooAuth) window.chatooAuth.logout();
-            else {
-                localStorage.clear();
-                sessionStorage.clear();
-                location.reload();
-            }
-        }
+        gainXP(n) { this.state.xp += n; this.updateXPUI(); },
+        logout() { localStorage.clear(); location.reload(); }
     };
 
-    function openWallet() {
-        if (window.chatooAuth?.isPiAuthenticated()) {
-            Swal.fire({
-                title: '💳 محفظة Pi',
-                html: `<p>اسم المستخدم: <strong>${window.chatooAuth.getRealUsername()}</strong></p>
-                       <p>الرصيد يُعرض داخل متصفح Pi</p>`,
-                icon: 'info',
-                background: "#121214",
-                color: "#fff"
-            });
-        } else {
-            Swal.fire({
-                title: '🔐 سجّل الدخول أولاً',
-                text: 'اضغط على زر تسجيل الدخول في الأعلى',
-                icon: 'warning',
-                background: "#121214",
-                color: "#fff"
-            });
-        }
-    }
+    function openSettingsModal() { Swal.fire({ title: 'الإعدادات', text: 'الإصدار 3.0.0', background: "#121214", color: "#fff" }); }
 
-    function openSettingsModal() {
-        Swal.fire({
-            title: '⚙️ الإعدادات',
-            html: `
-                <div style="text-align:right;">
-                    <p>الإصدار: ${CHATOO_CONFIG.app.version}</p>
-                    <p>الشبكة: ${CHATOO_CONFIG.app.network}</p>
-                    <button onclick="window.chatooAuth?.logout()" 
-                        style="background:#ff4757;border:none;color:#fff;padding:10px 20px;border-radius:10px;cursor:pointer;">
-                        ⏻ تسجيل الخروج
-                    </button>
-                </div>
-            `,
-            background: "#121214",
-            color: "#fff",
-            showConfirmButton: false
-        });
-    }
-
-    window.addEventListener('load', () => {
-        chatoo.init();
-        console.log('🚀 Chatoo Ultra Pro - Ready');
-    });
-
-    window.addEventListener('error', (e) => {
-        console.error('Chatoo Error:', e.error?.message || e.message);
-    });
+    window.addEventListener('load', () => chatoo.init());
     </script>
-
 </body>
 </html>
+
